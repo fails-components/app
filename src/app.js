@@ -42,7 +42,7 @@ import moment from 'moment';
 import reduce from 'image-blob-reduce';
 import {PDFGenerator} from './pdfgenerator';
 import fileDownload from 'js-file-download';
-import {FailsConfig} from 'fails-components-config';
+import {FailsConfig} from '@martenrichter/fails-components-config';
 
 let cfg=new FailsConfig({react: true});
 
@@ -494,7 +494,7 @@ class App extends Component {
 
   pollTemplate(node) {
     let changepollid = node.id;
-    if (node.type == "add") changepollid = Math.random().toString(36).substr(2, 9);
+    if (node.type === "add") changepollid = Math.random().toString(36).substr(2, 9);
     let changepolltext = (() => {
       this.changePoll({ id: changepollid, parentid: node.parentid, name: this.state.polledittext[node.id] });
       this.setState((state) => {
@@ -503,7 +503,7 @@ class App extends Component {
         toret.ispolledit[node.id] = false;
         return toret;
       })
-    }).bind(this);
+    });
 
     let deletepoll = (() => {
       this.deletePoll({ id: changepollid, parentid: node.parentid });
@@ -513,7 +513,7 @@ class App extends Component {
         toret.ispolledit[node.id] = false;
         return toret;
       })
-    }).bind(this);
+    });
 
     let starteditpoll = (() => {
       this.setState((state) => {
@@ -522,7 +522,7 @@ class App extends Component {
         toret.ispolledit[node.id] = true;
         return toret;
       })
-    }).bind(this);
+    });
 
     switch (node.type) {
      case "question": {
@@ -667,7 +667,7 @@ class App extends Component {
         bgpdfname=bgpdf.name; 
       }
       if (bgpdf.url) {
-        bgpdfname=<a href={bgpdf.url} type="application/pdf" target="_blank" download={bgpdfname}>{bgpdfname}  </a>;
+        bgpdfname=<a href={bgpdf.url} type="application/pdf" target="_blank" download={bgpdfname} rel="noreferrer" >{bgpdfname}  </a>;
       }
       if (bgpdf.none) {
         bgpdfrem=false;

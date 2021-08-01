@@ -1,15 +1,18 @@
 {
-  "name": "fails-components-app",
-  "version": "0.0.1",
+  "name": "@martenrichter/fails-components-app",
+  "version": "0.0.0",
   "private": true,
   "description": "Fails app ",
   "author": "Marten Richter",
   "license": "AGPL-3.0-or-later",
-  "repository": "martenrichter/fails-components-app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/martenrichter/fails-components-app.git"
+  },
   "homepage": ".",
   "dependencies": {
     "axios": "^0.21.1",
-    "fails-components-data": "file:../fails-components-data",
+    "@martenrichter/fails-components-data": "^0.0.1",
     "image-blob-reduce": "^2.2.3",
     "js-file-download": "^0.4.12",
     "jwt-decode": "^3.1.2",
@@ -23,7 +26,7 @@
     "react-scripts": "4.0.3",
     "react-transition-group": "^4.4.1",
     "tinycolor2": "^1.4.2",
-    "fails-components-config": "file:../fails-components-config"
+    "@martenrichter/fails-components-config": "^0.0.0"
   },
   "scripts": {
     "start": "set PORT=1001 && react-scripts start",
@@ -48,5 +51,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   }
 }
