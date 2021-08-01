@@ -1,7 +1,6 @@
 {
   "name": "@martenrichter/fails-components-app",
   "version": "0.0.0",
-  "private": true,
   "description": "Fails app ",
   "author": "Marten Richter",
   "license": "AGPL-3.0-or-later",
