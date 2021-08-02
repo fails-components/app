@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import {  Collection,  Sink, DrawObjectGlyph, DrawObjectPicture, MemContainer, DrawArea2, Dispatcher } from '@martenrichter/fails-components-data';
+import {  Collection,  Sink, DrawObjectGlyph, DrawObjectPicture, MemContainer, DrawArea2, Dispatcher } from '@fails-components/data';
 // eslint-disable-next-line no-unused-vars
 import { PDFDocument, StandardFonts, rgb, pushGraphicsState, rectangle, clip, popGraphicsState, PageSizes } from 'pdf-lib';
 import tinycolor from 'tinycolor2';

@@ -42,7 +42,7 @@ import moment from 'moment';
 import reduce from 'image-blob-reduce';
 import {PDFGenerator} from './pdfgenerator';
 import fileDownload from 'js-file-download';
-import {FailsConfig} from '@martenrichter/fails-components-config';
+import {FailsConfig} from '@fails-components/config';
 
 let cfg=new FailsConfig({react: true});
 
