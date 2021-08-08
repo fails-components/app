@@ -217,7 +217,12 @@ class App extends Component {
           console.log("processenv", process.env);
           console.log("URL", process.env.REACT_APP_NOTEPAD_BASE_URL);*/
 
-          let newwindow = window.open(cfg.getURL("web")/*+"?token="+response.data.token*/, "_blank");
+          console.log("debug target url config",cfg.getURL("web"));
+          let targeturl=cfg.getURL("web");
+          if (targeturl[0] === '/') targeturl= window.location.protocol + '//' + window.location.hostname + targeturl;
+          console.log("debug target url",targeturl);
+
+          let newwindow = window.open(targeturl/*+"?token="+response.data.token*/, "_blank");
           
 
 
@@ -229,9 +234,15 @@ class App extends Component {
             //console.log("token to pass",response.data.token);
             //newwindow.failstoken = response.data.token;
             
-            setTimeout(()=> {
-            newwindow.postMessage({token: response.data.token, purpose: "notes"},cfg.getURL("web"));
-            },1000);
+            let postcount = 0
+            let intervalId = setInterval(() => {
+              newwindow.postMessage(
+                { token: response.data.token, purpose: 'notes' },
+                targeturl
+              )
+              if (postcount === 50) window.clearInterval(intervalId) // if it was not loaded after 10 seconds forget about it
+              postcount++
+            }, 200)
           }
         }
       }
@@ -258,7 +269,12 @@ class App extends Component {
           console.log("processenv", process.env);
           console.log("URL", process.env.REACT_APP_NOTEPAD_BASE_URL);*/
 
-          let newwindow = window.open(cfg.getURL("web")/*+"?token="+response.data.token*/, "_blank");
+          console.log("debug target url config",cfg.getURL("web"));
+          let targeturl=cfg.getURL("web");
+          if (targeturl[0] === '/') targeturl= window.location.protocol + '//' + window.location.hostname + targeturl;
+          console.log("debug target url",targeturl);
+
+          let newwindow = window.open(targeturl/*+"?token="+response.data.token*/, "_blank");
           
 
 
@@ -270,9 +286,16 @@ class App extends Component {
             //console.log("token to pass",response.data.token);
             //newwindow.failstoken = response.data.token;
             
-            setTimeout(()=> {
-            newwindow.postMessage({token: response.data.token, purpose: "lecture"},cfg.getURL("web"));
-            },1000);
+            let postcount = 0
+            let intervalId = setInterval(() => {
+              newwindow.postMessage(
+                { token: response.data.token, purpose: 'lecture' },
+                targeturl
+              )
+              if (postcount === 50) window.clearInterval(intervalId) // if it was not loaded after 10 seconds forget about it
+              postcount++
+            }, 200)
+            
           }
         }
       }
