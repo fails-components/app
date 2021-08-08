@@ -158,7 +158,7 @@ class App extends Component {
     let params={};
     if (lectureuuid) params.lectureuuid=lectureuuid;
     try {
-      let response = await axios.get('/app/lecture/pdfdata', {...this.axiosConfig(), params: params});
+      let response = await axios.get('/lecture/pdfdata', {...this.axiosConfig(), params: params});
       if (response) {
         if (response.data.error) {
           this.messages.show({ severity: 'error', summary: "get /app/lecture/pdfdata failed", detail: response.data.error });
@@ -207,7 +207,7 @@ class App extends Component {
     
 
     try {
-      let response = await axios.get('/app/lecture/studenttoken', this.axiosConfig());
+      let response = await axios.get('/lecture/studenttoken', this.axiosConfig());
       if (response) {
         if (response.data.error) {
           this.messages.show({ severity: 'error', summary: "get /app/lecture/studenttoken failed", detail: response.data.error });
@@ -248,7 +248,7 @@ class App extends Component {
     
 
     try {
-      let response = await axios.get('/app/lecture/notepadtoken', this.axiosConfig());
+      let response = await axios.get('/lecture/notepadtoken', this.axiosConfig());
       if (response) {
         if (response.data.error) {
           this.messages.show({ severity: 'error', summary: "get /app/lecture/notepadtoken failed", detail: response.data.error });
@@ -297,7 +297,7 @@ class App extends Component {
         data.append('filethumbnail', thumbnail);
         data.append('data', JSON.stringify({ filename: picture.name }));
 
-        let response=await axios.post('/app/lecture/picture', data, this.axiosConfig());
+        let response=await axios.post('/lecture/picture', data, this.axiosConfig());
         if (response) {
           if (response.data.error) {
             this.messages.show({severity: 'error', summary: "get /app/lecture/picture failed", detail: response.data.error});
@@ -347,7 +347,7 @@ class App extends Component {
       }
 
 
-      let response = await axios.post('/app/lecture/bgpdf', data, this.axiosConfig());
+      let response = await axios.post('/lecture/bgpdf', data, this.axiosConfig());
       if (response) {
         if (response.data.error) {
           if (this.messages) this.messages.show({ severity: 'error', summary: "get /app/lecture/bgpdf failed", detail: response.data.error });
@@ -371,7 +371,7 @@ class App extends Component {
   async renewToken()
   {
     axios.get(
-      '/app/token',
+      '/token',
       this.axiosConfig()).catch(function (error) {
             console.log("Error",error.toJSON());           
             if (this.messages) this.messages.show({severity: 'error', summary: error.name, detail: error.message});
@@ -398,7 +398,7 @@ class App extends Component {
   {
     //console.log("post",para);
     try {
-      let response=await axios.post('/app/lecture/copy',para, this.axiosConfig());
+      let response=await axios.post('/lecture/copy',para, this.axiosConfig());
       //console.log("post response", response);
       if (response) {
         if (response.data.error) {
@@ -418,7 +418,7 @@ class App extends Component {
   {
     //console.log("patch",patch);
     try {
-      let response=await axios.patch('/app/lecture',patch, this.axiosConfig());
+      let response=await axios.patch('/lecture',patch, this.axiosConfig());
       //console.log("patch response", response);
       if (response) {
         if (response.data.error) {
@@ -437,7 +437,7 @@ class App extends Component {
   async getLectureDetails()
   {
     try {
-      let response=await axios.get('/app/lecture',this.axiosConfig());
+      let response=await axios.get('/lecture',this.axiosConfig());
       if (response) {
         if (response.data.error) {
           if (this.messages) this.messages.show({severity: 'error', summary: "get /app/lecture failed", detail: response.data.error});
@@ -456,7 +456,7 @@ class App extends Component {
   async getLectures()
   {
     try {
-      let response=await axios.get('/app/lectures',this.axiosConfig());
+      let response=await axios.get('/lectures',this.axiosConfig());
       if (response) {
         if (response.data.error) {
           if (this.messages) this.messages.show({severity: 'error', summary: "get /app/lectures failed", detail: response.data.error});
