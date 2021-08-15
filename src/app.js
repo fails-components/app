@@ -39,10 +39,14 @@ import { confirmDialog } from 'primereact/confirmdialog';
 import jwt_decode from "jwt-decode";
 import axios from 'axios';
 import moment from 'moment';
-import reduce from 'image-blob-reduce';
+import Pica from 'pica';
+import ImageBlobReduce from "image-blob-reduce";
 import {PDFGenerator} from './pdfgenerator';
 import fileDownload from 'js-file-download';
 import {FailsConfig} from '@fails-components/config';
+
+const pica = Pica({ features: ["js", "wasm", "cib"] });
+const reduce = new ImageBlobReduce({ pica });
 
 let cfg=new FailsConfig({react: true});
 
@@ -77,7 +81,7 @@ class App extends Component {
     this.state.polledittext={};
     this.state.ispolledit={};
 
-    this.picturereduce=reduce();
+
 
     this.pictureupload=React.createRef();
     this.bgpdfupload=React.createRef();
@@ -313,7 +317,7 @@ class App extends Component {
       try {
         let picture = input.files[0];
         let blob = await fetch(picture.objectURL).then(r => r.blob());
-        let thumbnail = await this.picturereduce.toBlob(picture, { max: 100 });
+        let thumbnail = await reduce.toBlob(picture, { max: 100 });
 
         const data = new FormData();
         data.append('file', blob);
