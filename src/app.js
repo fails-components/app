@@ -55,7 +55,7 @@ axios.defaults.baseURL = cfg.getURL('app')
 
 console.log('process env', process.env)
 
-console.log('axios base', axios.defaults.baseURL)
+console.log('axios base', axios.defaults.baseURL, cfg.getURL('app'))
 
 addLocale('de', {
   firstDayOfWeek: 1,
@@ -1026,7 +1026,13 @@ class App extends Component {
         <Dialog
           header='Session renewal'
           visible={this.state.showrenew}
-          footer={<Button label='renew' onClick={this.renewToken}></Button>}
+          footer={
+            <Button
+              label='renew'
+              className='p-m-2'
+              onClick={this.renewToken}
+            ></Button>
+          }
         >
           <p>
             {' '}
@@ -1043,7 +1049,11 @@ class App extends Component {
             visible={this.state.pdfgenerate}
             footer={
               this.state.pdfgenerate.pdf ? (
-                <Button label='Download' onClick={this.downloadPDF}></Button>
+                <Button
+                  label='Download'
+                  className='p-m-2'
+                  onClick={this.downloadPDF}
+                ></Button>
               ) : (
                 <span> Wait for download to finish..</span>
               )
@@ -1077,6 +1087,7 @@ class App extends Component {
                           <Button
                             icon='pi pi-users'
                             label='Join lecture'
+                            className='p-m-2'
                             onClick={this.openStudentNotes}
                           ></Button>
                         </Card>
@@ -1085,65 +1096,70 @@ class App extends Component {
                     {startlecture && (
                       <div className='p-col-12 p-md-6'>
                         <Card title='Start/Join lecture'>
-                          Date: &nbsp;
-                          <Calendar
-                            value={date}
-                            onChange={this.onChangeCalendar}
-                            showIcon
-                          />
-                          <br></br>
-                          <br></br>
-                          <Button
-                            icon='pi pi-pencil'
-                            label='Notebook'
-                            onClick={
-                              bgpdfixed
-                                ? this.openNotebook
-                                : this.openNotebookWarn
-                            }
-                          ></Button>{' '}
-                          &nbsp;
-                          <Button
+                          <div className='p-d-flex p-flex-column'>
+                            <div className='p-mb-2'>
+                              Date: &nbsp;
+                              <Calendar
+                                value={date}
+                                onChange={this.onChangeCalendar}
+                                showIcon
+                              />
+                            </div>
+                            <div className='p-mb-2'>
+                              <Button
+                                icon='pi pi-pencil'
+                                label='Notebook'
+                                className='p-m-2'
+                                onClick={
+                                  bgpdfixed
+                                    ? this.openNotebook
+                                    : this.openNotebookWarn
+                                }
+                              ></Button>{' '}
+                              {/*   <Button
                             icon='pi pi-eye'
                             label='Screencapture'
-                          ></Button>
-                          <br></br>
-                          <br></br>
-                          <div className='p-grid'>
-                            {bgpdfup && (
-                              <div className='p-col-2'>
-                                <FileUpload
-                                  mode='basic'
-                                  name='bgpdfupload'
-                                  ref={this.bgpdfupload}
-                                  chooseOptions={{
-                                    icon: 'pi pi-fw pi-upload',
-                                    className:
-                                      'custom-choose-btn p-button-rounded p-button-text',
-                                    iconOnly: true
-                                  }}
-                                  auto
-                                  accept='application/pdf'
-                                  maxFileSize={20000000}
-                                  customUpload={true}
-                                  uploadHandler={this.uploadBgpdf}
-                                />
+                            className='p-m-2'
+                          ></Button> */}
+                            </div>
+                            <div className='p-mb-2'>
+                              <div className='p-grid'>
+                                {bgpdfup && (
+                                  <div className='p-col-2'>
+                                    <FileUpload
+                                      mode='basic'
+                                      name='bgpdfupload'
+                                      ref={this.bgpdfupload}
+                                      chooseOptions={{
+                                        icon: 'pi pi-fw pi-upload',
+                                        className:
+                                          'custom-choose-btn p-button-rounded p-button-text',
+                                        iconOnly: true
+                                      }}
+                                      auto
+                                      accept='application/pdf'
+                                      maxFileSize={20000000}
+                                      customUpload={true}
+                                      uploadHandler={this.uploadBgpdf}
+                                    />
+                                  </div>
+                                )}
+                                <div className='p-col-8'>
+                                  PDF Background: {bgpdfname}{' '}
+                                </div>{' '}
+                                {bgpdfrem && (
+                                  <div className='p-col-2'>
+                                    <Button
+                                      icon='pi pi-times'
+                                      className='p-button-rounded p-button-danger p-button-text'
+                                      onClick={() => {
+                                        this.uploadBgpdf({})
+                                      }}
+                                    ></Button>
+                                  </div>
+                                )}
                               </div>
-                            )}
-                            <div className='p-col-8'>
-                              PDF Background: {bgpdfname}{' '}
-                            </div>{' '}
-                            {bgpdfrem && (
-                              <div className='p-col-2'>
-                                <Button
-                                  icon='pi pi-times'
-                                  className='p-button-rounded p-button-danger p-button-text'
-                                  onClick={() => {
-                                    this.uploadBgpdf({})
-                                  }}
-                                ></Button>
-                              </div>
-                            )}
+                            </div>
                           </div>
                         </Card>
                       </div>
@@ -1153,17 +1169,18 @@ class App extends Component {
                         <Button
                           icon='pi pi-file'
                           label='PDF color'
+                          className='p-m-2'
                           onClick={() => this.pdfGenerate(true)}
                         ></Button>
                         &nbsp;
                         <Button
                           icon='pi pi-file'
                           label='PDF sw'
+                          className='p-m-2'
                           onClick={() => this.pdfGenerate(false)}
                         ></Button>
                       </Card>
                     </div>
-                    <br></br>
 
                     {pictures && (
                       <div className='p-col-12 p-md-6'>
@@ -1218,7 +1235,6 @@ class App extends Component {
                               this.setState({ selLecture: e.value })
                             }
                           ></Tree>
-                          <br></br>
                           {this.state.selLecture && (
                             <div className='p-grid'>
                               {!bgpdfixed && (
@@ -1239,6 +1255,7 @@ class App extends Component {
                                 <Button
                                   icon='pi pi-images'
                                   label='Get pictures'
+                                  className='p-m-2'
                                   onClick={() =>
                                     this.doCopy({
                                       fromuuid: this.state.selLecture,
@@ -1251,6 +1268,7 @@ class App extends Component {
                                 <Button
                                   icon='pi pi-tags'
                                   label='Get polls '
+                                  className='p-m-2'
                                   onClick={() =>
                                     this.doCopy({
                                       fromuuid: this.state.selLecture,
@@ -1263,6 +1281,7 @@ class App extends Component {
                                 <Button
                                   icon='pi pi-file'
                                   label='PDF'
+                                  className='p-m-2'
                                   onClick={() =>
                                     this.pdfGenerate(
                                       true,
@@ -1290,10 +1309,19 @@ class App extends Component {
                 </div>
               </div>
             </ScrollPanel>
-            This is FAILS-Components (Fancy Automated Interactive Lecture System
-            Components)! Copyright 2015-2017 (original FAILS), 2021- (FAILS
-            Components) Marten Richter, all rights reserved! TODO ADD text to
-            acknowledge other OS Software
+            <p>
+              {' '}
+              This is FAILS-Components (Fancy Automated Interactive Lecture
+              System System Components)! Copyright 2015-2017 (original FAILS),
+              2021- Components) Marten Richter <br /> <br />
+              Released under GNU Affero General Public License Version 3<br />{' '}
+              <br />
+              Build upon the shoulders of giants, see{' '}
+              <a href='/static/oss/attribution.txt'>
+                {' '}
+                OSS attribution and licensing.
+              </a>
+            </p>
           </div>
         )}
       </React.Fragment>
