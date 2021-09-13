@@ -46,6 +46,11 @@ import { PDFGenerator } from './pdfgenerator'
 import fileDownload from 'js-file-download'
 import { FailsConfig } from '@fails-components/config'
 
+window.parent.postMessage(
+  JSON.stringify({ subject: 'lti.frameResize', height: '90vh' }),
+  '*'
+) // tell the lms that the frame should be big, if the lms support this kind of message
+
 const pica = Pica({ features: ['js', 'wasm', 'cib'] })
 const reduce = new ImageBlobReduce({ pica })
 
@@ -1308,20 +1313,19 @@ class App extends Component {
                   </div>
                 </div>
               </div>
-            </ScrollPanel>
-            <p>
-              {' '}
-              This is FAILS-Components (Fancy Automated Interactive Lecture
-              System System Components)! Copyright 2015-2017 (original FAILS),
-              2021- Components) Marten Richter <br /> <br />
-              Released under GNU Affero General Public License Version 3<br />{' '}
-              <br />
-              Build upon the shoulders of giants, see{' '}
-              <a href='/static/oss/attribution.txt'>
+              <p>
                 {' '}
-                OSS attribution and licensing.
-              </a>
-            </p>
+                This is FAILS-Components (Fancy Automated Interactive Lecture
+                System System Components)! Copyright 2015-2017 (original FAILS),
+                2021- (Components) Marten Richter.
+                <br /> Released under GNU Affero General Public License Version
+                3 . Build upon the shoulders of giants, see{' '}
+                <a href='/static/oss/attribution.txt'>
+                  {' '}
+                  OSS attribution and licensing.
+                </a>
+              </p>
+            </ScrollPanel>
           </div>
         )}
       </React.Fragment>
