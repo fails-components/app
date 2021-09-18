@@ -36,6 +36,7 @@ import { FileUpload } from 'primereact/fileupload'
 import { locale, addLocale } from 'primereact/api'
 import { ToggleButton } from 'primereact/togglebutton'
 import { confirmDialog } from 'primereact/confirmdialog'
+import { OverlayPanel } from 'primereact/overlaypanel'
 // eslint-disable-next-line camelcase
 import jwt_decode from 'jwt-decode'
 import axios from 'axios'
@@ -1313,18 +1314,26 @@ class App extends Component {
                   </div>
                 </div>
               </div>
-              <p>
-                {' '}
-                This is FAILS-Components (Fancy Automated Interactive Lecture
-                System System Components)! Copyright 2015-2017 (original FAILS),
-                2021- (Components) Marten Richter.
-                <br /> Released under GNU Affero General Public License Version
-                3 . Build upon the shoulders of giants, see{' '}
-                <a href='/static/oss/attribution.txt'>
+              <Button
+                label='About Fails'
+                icon='pi pi-info'
+                className='p-button-text p-button-rounded'
+                onClick={(e) => this.copyingop.toggle(e)}
+              />
+              <OverlayPanel ref={(el) => (this.copyingop = el)}>
+                <p>
                   {' '}
-                  OSS attribution and licensing.
-                </a>
-              </p>
+                  This is FAILS-Components (Fancy Automated Interactive Lecture
+                  System System Components)! Copyright 2015-2017 (original
+                  FAILS), 2021- (Components) Marten Richter.
+                  <br /> Released under GNU Affero General Public License
+                  Version 3 . Build upon the shoulders of giants, see{' '}
+                  <a href='/static/oss/attribution.txt'>
+                    {' '}
+                    OSS attribution and licensing.
+                  </a>
+                </p>
+              </OverlayPanel>
             </ScrollPanel>
           </div>
         )}
