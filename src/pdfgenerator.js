@@ -129,6 +129,12 @@ export class PDFGenerator extends Sink {
       (this.pageheight - 2 * this.margins - this.textHeight) / this.geoscale
   }
 
+  getStringHeightLines(string, fontSize, maxWidth) {
+    const width = this.helvetica.widthOfTextAtSize(string, fontSize)
+
+    return Math.ceil(maxWidth / width)
+  }
+
   startPage(ystart, yend) {
     // var page = this.page;
     /* if (this.firstpage) {
@@ -162,15 +168,20 @@ export class PDFGenerator extends Sink {
   endPage(ystart, yend) {
     const page = this.page
 
-    page.drawText(this.footertext + ', ' + this.pagenumber.toString(), {
+    const ftext = this.footertext + ', ' + this.pagenumber.toString()
+    const maxWidth = this.pagewidth - 2 * this.tmarginsx
+
+    const nlines = this.getStringHeightLines(ftext, 8, maxWidth)
+
+    page.drawText(ftext, {
       x: this.tmarginsx,
-      y: this.tmarginsy,
+      y: this.tmarginsy - nlines * 10,
       font: this.helvetica,
       size: 8,
       color: rgb(0, 0, 0),
       lineHeight: 10,
       opacity: 1.0,
-      maxWidth: this.pagewidth - 2 * this.tmarginsx
+      maxWidth: maxWidth
     })
 
     this.pagenumber++
