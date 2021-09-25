@@ -1,6 +1,6 @@
 {
   "name": "@fails-components/app",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Fails app ",
   "author": "Marten Richter",
   "license": "AGPL-3.0-or-later",
@@ -12,7 +12,7 @@
   "dependencies": {
     "@fails-components/config": ">=0.0.3",
     "@fails-components/data": ">=0.0.2",
-    "axios": "^0.21.1",
+    "axios": "^0.21.4",
     "image-blob-reduce": "^3.0.1",
     "js-file-download": "^0.4.12",
     "jwt-decode": "^3.1.2",
@@ -21,7 +21,7 @@
     "pica": "^7.1.0",
     "primeflex": "^2.0.0",
     "primeicons": "^4.1.0",
-    "primereact": "^6.3.1",
+    "primereact": "^6.5.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
@@ -30,16 +30,16 @@
   },
   "devDependencies": {
     "babel-eslint": "^10.0.3",
-    "eslint": "^7.20.0",
+    "eslint": "^7.32.0",
     "eslint-config-prettier": "^7.2.0",
     "eslint-config-standard": "^16.0.2",
+    "eslint-plugin-import": "^2.24.2",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-prettier": "^3.3.1",
     "eslint-plugin-promise": "^4.3.1",
     "eslint-plugin-standard": "^4.1.0",
     "gh-pages": "^3.1.0",
-    "prettier": "^2.2.1"
+    "prettier": "^2.4.1"
   },
   "scripts": {
     "start": "set PORT=1001 && react-scripts start",
