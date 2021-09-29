@@ -280,6 +280,7 @@ class App extends Component {
               window.location.protocol +
               '//' +
               window.location.hostname +
+              (window.location.port !== '' ? ':' + window.location.port : '') +
               targeturl
           console.log('debug target url', targeturl)
 
@@ -349,6 +350,7 @@ class App extends Component {
               window.location.protocol +
               '//' +
               window.location.hostname +
+              (window.location.port !== '' ? ':' + window.location.port : '') +
               targeturl
           console.log('debug target url', targeturl)
 
