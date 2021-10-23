@@ -17,10 +17,6 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import 'primereact/resources/themes/nova/theme.css'
-import 'primereact/resources/primereact.min.css'
-import 'primeflex/primeflex.css'
-import 'primeicons/primeicons.css'
 import React, { Component } from 'react'
 import { Button } from 'primereact/button'
 import { ProgressSpinner } from 'primereact/progressspinner'
@@ -1079,7 +1075,10 @@ class App extends Component {
             <h3>Lecture: {lecturename}</h3>
             <h4>{displaynames}</h4>
             <h5>Hello {displayname}!</h5>
-            <ScrollPanel style={{ width: '100%', height: '75vh' }}>
+            <ScrollPanel
+              style={{ width: '100%', height: '75vh' }}
+              className='appscroll'
+            >
               <div className='p-grid'>
                 <div className='p-col-12 p-md-6'>
                   <div className='p-grid'>

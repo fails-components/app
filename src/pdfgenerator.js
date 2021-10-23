@@ -144,6 +144,7 @@ export class PDFGenerator extends Sink {
         } */
 
     this.yoffset = ystart
+    this.yend = yend
 
     // console.log("höhe",this.pageheight - this.margins - this.textHeight, this.pageheight);
 
@@ -363,12 +364,15 @@ export class PDFGenerator extends Sink {
         console.log('unknown type', obj.type)
       }
     }
-    // no add fake clipping
+    // now add fake clipping
     page.drawRectangle({
       x: 0,
       y: 0,
       width: this.pagewidth,
-      height: this.margins,
+      height:
+        this.margins +
+        this.textHeight +
+        Math.max(0, geoscale * (-this.yend + this.yoffset + this.scrollheight)), // white out the line break!
       color: rgb(1, 1, 1)
     })
     page.drawRectangle({

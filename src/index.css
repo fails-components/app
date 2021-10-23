@@ -11,3 +11,18 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+.appscroll .p-scrollpanel-wrapper {
+  border-right: 9px solid #f4f4f4;
+}
+
+.appscroll .p-scrollpanel-bar {
+  background-color: #aaaaaa;
+  opacity: 1;
+  transition: background-color .3s;
+}
+
+
+.appscroll .p-scrollpanel-bar:hover {
+  background-color: #135ba1;
+}
