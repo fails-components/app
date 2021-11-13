@@ -153,6 +153,8 @@ class App extends Component {
     this.downloadPDF = this.downloadPDF.bind(this)
 
     this.doCopy = this.doCopy.bind(this)
+
+    this.checkTokenRenew = this.checkTokenRenew.bind(this)
   }
 
   axiosConfig() {
@@ -171,6 +173,12 @@ class App extends Component {
     ) {
       this.getLectures()
     }
+
+    if (this.tokentimerid) {
+      window.clearInterval(this.tokentimerid)
+      delete this.tokentimerid
+    }
+    this.tokentimerid = window.setInterval(this.checkTokenRenew, 1000)
   }
 
   onChangeCalendar(e) {
@@ -494,6 +502,13 @@ class App extends Component {
     }
   }
 
+  checkTokenRenew() {
+    if (!this.tokentimeout) return
+    const delay = this.tokentimeout.diff(moment()).valueOf()
+
+    this.setState({ showrenew: delay })
+  }
+
   async renewToken() {
     axios
       .get('/token', this.axiosConfig())
@@ -521,17 +536,10 @@ class App extends Component {
             } else {
               console.log('token details', response.data.token)
               // console.log(moment.unix(jwt_decode(response.data.token).exp,"x").format() );
-              const delay =
-                moment
-                  .unix(jwt_decode(response.data.token).exp, 'x')
-                  .diff(moment())
-                  .valueOf() -
-                60 * 1000
-              // console.log("delay",delay);
-              setTimeout(() => {
-                this.setState({ showrenew: true })
-              }, delay)
-              // console.log("token renew",jwt_decode(response.data.token));
+              this.tokentimeout = moment.unix(
+                jwt_decode(response.data.token).exp,
+                'x'
+              )
               this.setState({ token: response.data.token, showrenew: false })
             }
           }
@@ -1029,20 +1037,31 @@ class App extends Component {
         </Toast>
         <Dialog
           header='Session renewal'
-          visible={this.state.showrenew}
+          visible={this.state.showrenew && this.state.showrenew < 60 * 1000}
+          closable={false}
           footer={
-            <Button
-              label='renew'
-              className='p-m-2'
-              onClick={this.renewToken}
-            ></Button>
+            this.state.showrenew > 0 ? (
+              <Button
+                label={'Renew token'}
+                className='p-m-2'
+                onClick={this.renewToken}
+              ></Button>
+            ) : (
+              <p> You have to reload the page.</p>
+            )
           }
         >
-          <p>
-            {' '}
-            Your session will expire in less than a minute. Do you want to
-            extend the session?
-          </p>
+          {this.state.showrenew > 0 && (
+            <p>
+              {' '}
+              Your session will expire in less than{' '}
+              {(this.state.showrenew / 1000).toFixed(0)} seconds. Do you want to
+              extend the session?
+            </p>
+          )}
+          {this.state.showrenew < 0 && (
+            <p> Your session is expired! You have to reload the page!</p>
+          )}
         </Dialog>
 
         {this.state.pdfgenerate && (
