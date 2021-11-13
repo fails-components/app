@@ -236,6 +236,7 @@ export class PDFGenerator extends Sink {
 
   startPath(time, objnum, curclient, x, y, type, color, w, pressure) {
     this.workobj[objnum] = new DrawObjectGlyph(objnum)
+    this.objects.push(this.workobj[objnum])
     this.workobj[objnum].startPath(
       x,
       y - this.yoffset,
@@ -256,7 +257,6 @@ export class PDFGenerator extends Sink {
   finishPath(time, objid, curclient) {
     if (this.workobj[objid]) {
       this.workobj[objid].finishPath()
-      this.objects.push(this.workobj[objid])
       delete this.workobj[objid]
     }
   }
