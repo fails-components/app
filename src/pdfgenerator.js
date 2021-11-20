@@ -19,11 +19,9 @@
 
 import {
   Collection,
-  Sink,
-  DrawObjectGlyph,
-  DrawObjectPicture,
+  DrawObjectContainer,
   MemContainer,
-  DrawArea2,
+  DrawArea3,
   Dispatcher
 } from '@fails-components/data'
 // eslint-disable-next-line no-unused-vars
@@ -49,11 +47,9 @@ function base64Toab(base64) {
   return bytes.buffer
 }
 
-export class PDFGenerator extends Sink {
+export class PDFGenerator extends DrawObjectContainer {
   constructor(args) {
-    super()
-
-    this.pictures = args.info.usedpictures
+    super(args)
 
     this.footertext = args.info.coursetitle + ', ' + args.info.title + ', '
     if (args.info.ownersdisplaynames) {
@@ -148,8 +144,7 @@ export class PDFGenerator extends Sink {
 
     // console.log("höhe",this.pageheight - this.margins - this.textHeight, this.pageheight);
 
-    this.objects = []
-    this.workobj = {}
+    this.resetDrawing()
 
     /* doc.translate(this.margins.left, this.margins.top); //margins
         doc.scale(this.geoscale);
@@ -198,67 +193,6 @@ export class PDFGenerator extends Sink {
   finalize(callback) {
     this.doc.end()
     // console.log('finalize called');
-  }
-
-  addPicture(time, objnum, curclient, x, y, width, height, uuid) {
-    const pictinfo = this.pictures.find((el) => el.sha === uuid)
-    // console.log("pictinfo",pictinfo);
-    if (pictinfo) {
-      const addpict = new DrawObjectPicture(objnum)
-
-      addpict.addPicture(
-        x,
-        y - this.yoffset,
-        width,
-        height,
-        uuid,
-        pictinfo.url,
-        pictinfo.mimetype
-      )
-
-      this.objects.push(addpict)
-    }
-
-    /*
-        var pict = this.pictures[uuid];
-        if (pict) {
-            var filename = null;
-            if (pict.mimetype == 'image/png') {
-                filename = this.dir + '/' + uuid + '.png'
-            } else if (pict.mimetype == 'image/jpeg') {
-                filename = this.dir + '/' + uuid + '.jpg'
-            }
-            if (filename) this.doc.image(filename, x, y, { width: iwidth, height: iheight });
-        } */
-
-    // resubmitpath
-  }
-
-  startPath(time, objnum, curclient, x, y, type, color, w, pressure) {
-    this.workobj[objnum] = new DrawObjectGlyph(objnum)
-    this.objects.push(this.workobj[objnum])
-    this.workobj[objnum].startPath(
-      x,
-      y - this.yoffset,
-      type,
-      color,
-      w,
-      pressure
-    )
-  }
-
-  addToPath(time, objid, curclient, x, y, pressure) {
-    if (this.workobj[objid]) {
-      // TODO handle objid
-      this.workobj[objid].addToPath(x, y - this.yoffset, pressure)
-    }
-  }
-
-  finishPath(time, objid, curclient) {
-    if (this.workobj[objid]) {
-      this.workobj[objid].finishPath()
-      delete this.workobj[objid]
-    }
   }
 
   async processPageDrawings() {
@@ -399,16 +333,12 @@ export class PDFGenerator extends Sink {
     })
   }
 
-  scrollBoard(time, x, y) {
-    // do ... nothing....
-  }
-
   async createPDF() {
     // ok we start, first we create a container and fill it
 
-    const drawarea = new DrawArea2()
+    const drawarea = new DrawArea3()
     this.collection.redrawTo(drawarea) // we determine possible positions for page breaks
-
+    drawarea.calculateWeights()
     // now we create, the pdfs
 
     const dispatch = new Dispatcher()

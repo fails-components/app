@@ -911,7 +911,6 @@ class App extends Component {
       for (const item in nobucket) {
         lecturedata.push(item)
       }
-      console.log(lecturedata)
     }
 
     let picts = []
