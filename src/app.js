@@ -1267,6 +1267,7 @@ class App extends Component {
                                   <Button
                                     icon='pi pi-copy'
                                     label='Copy'
+                                    className='p-m-2'
                                     onClick={() =>
                                       this.doCopy({
                                         fromuuid: this.state.selLecture,
