@@ -42,6 +42,8 @@ import ImageBlobReduce from 'image-blob-reduce'
 import { PDFGenerator } from './pdfgenerator'
 import fileDownload from 'js-file-download'
 import { FailsConfig } from '@fails-components/config'
+import failsLogo from './logo/logo2.svg'
+import failsLogoLong from './logo/logo1.svg'
 
 window.parent.postMessage(
   JSON.stringify({ subject: 'lti.frameResize', height: '90vh' }),
@@ -1045,22 +1047,31 @@ class App extends Component {
                 className='p-m-2'
                 onClick={this.renewToken}
               ></Button>
-            ) : (
-              <p> You have to reload the page.</p>
-            )
+            ) : null
           }
         >
-          {this.state.showrenew > 0 && (
-            <p>
-              {' '}
-              Your session will expire in less than{' '}
-              {(this.state.showrenew / 1000).toFixed(0)} seconds. Do you want to
-              extend the session?
-            </p>
-          )}
-          {this.state.showrenew < 0 && (
-            <p> Your session is expired! You have to reload the page!</p>
-          )}
+          <div className='p-grid p-align-center'>
+            <div className='p-col-3'>
+              <img
+                src={failsLogo}
+                style={{ width: '120px' }}
+                alt='FAILS logo'
+              />
+            </div>
+            <div className='p-col-9'>
+              {this.state.showrenew > 0 && (
+                <p>
+                  {' '}
+                  Your session will expire in less than{' '}
+                  {(this.state.showrenew / 1000).toFixed(0)} seconds. Do you
+                  want to extend the session?
+                </p>
+              )}
+              {this.state.showrenew < 0 && (
+                <p> Your session is expired! You have to reload the page!</p>
+              )}
+            </div>
+          </div>
         </Dialog>
 
         {this.state.pdfgenerate && (
@@ -1081,17 +1092,35 @@ class App extends Component {
               )
             }
           >
-            <p>The system is generating PDF. </p>
-            <p>Current status is: {this.state.pdfgenerate.message} </p>
+            <div className='p-grid p-align-center'>
+              <div className='p-col-3'>
+                <img
+                  src={failsLogo}
+                  style={{ width: '80px' }}
+                  alt='FAILS logo'
+                />
+              </div>
+              <div className='p-col-9'>
+                <p>The system is generating PDF. </p>
+                <p>Current status is: {this.state.pdfgenerate.message} </p>
+              </div>
+            </div>
           </Dialog>
         )}
         {!this.state.token && <h2>No valid token!</h2>}
         {!this.state.lectdetail && <h2>Loading... or no token refresh!</h2>}
         {this.state.token && this.state.lectdetail && (
           <div>
-            <h2>Course: {coursename}</h2>
-            <h3>Lecture: {lecturename}</h3>
-            <h4>{displaynames}</h4>
+            <div className='p-grid p-align-center'>
+              <div className='p-col-fixed' style={{ width: '150px' }}>
+                <img src={failsLogo} alt='FAILS logo' />
+              </div>
+              <div className='p-col'>
+                <h2>Course: {coursename}</h2>
+                <h3>Lecture: {lecturename}</h3>
+                <h4>{displaynames}</h4>
+              </div>
+            </div>
             <h5>Hello {displayname}!</h5>
             <ScrollPanel
               style={{ width: '100%', height: '75vh' }}
@@ -1334,25 +1363,41 @@ class App extends Component {
                   </div>
                 </div>
               </div>
-              <Button
-                label='About Fails'
-                icon='pi pi-info'
-                className='p-button-text p-button-rounded'
-                onClick={(e) => this.copyingop.toggle(e)}
-              />
+              <div className='p-grid p-align-center'>
+                <div className='p-col-fixed' style={{ width: '300px' }}>
+                  <img
+                    src={failsLogoLong}
+                    alt='About FAILS'
+                    style={{ cursor: 'pointer' }}
+                    onClick={(e) => this.copyingop.toggle(e)}
+                  />
+                </div>
+              </div>
               <OverlayPanel ref={(el) => (this.copyingop = el)}>
-                <p>
-                  {' '}
-                  This is FAILS-Components (Fancy Automated Interactive Lecture
-                  System System Components)! Copyright 2015-2017 (original
-                  FAILS), 2021- (Components) Marten Richter.
-                  <br /> Released under GNU Affero General Public License
-                  Version 3 . Build upon the shoulders of giants, see{' '}
-                  <a href='/static/oss/attribution.txt'>
-                    {' '}
-                    OSS attribution and licensing.
-                  </a>
-                </p>
+                <div className='p-grid'>
+                  <div className='p-col-3'>
+                    <img src={failsLogo} alt='FAILS logo' />
+                  </div>
+                  <div className='p-col-9'>
+                    <h4>
+                      <b>FAILS</b> - components <br />
+                      (Fancy automated internet lecture system)
+                    </h4>
+                    Copyright (C) 2015-2017 (original FAILS), <br />
+                    2021- (FAILS Components) Marten Richter
+                  </div>
+                </div>
+                FAILS logo by chadkills <br />
+                Custom icons by icon_xpert786 <br /> <br />
+                Released under GNU Affero General Public License Version 3.{' '}
+                <br /> <br />
+                Download the source code from{' '}
+                <a href='https://github.com/fails-components'>
+                  https://github.com/fails-components
+                </a>{' '}
+                <br /> <br />
+                Build upon the shoulders of giants, see{' '}
+                <a href='/static/oss'> OSS attribution and licensing.</a>
               </OverlayPanel>
             </ScrollPanel>
           </div>

@@ -99,10 +99,11 @@ export class PDFGenerator extends DrawObjectContainer {
 
     this.helvetica = await this.doc.embedFont(StandardFonts.Helvetica)
     if (args.info) {
-        if (args.info.title) this.doc.setTitle(args.info.title)
-        if (args.info.coursetitle) this.doc.setSubject(args.info.coursetitle)
-        if (args.info.ownersdisplaynames) this.doc.setAuthor(args.info.ownersdisplaynames.join(', '))
-        if (args.info.date) this.doc.setCreationDate(new Date(args.info.date))
+      if (args.info.title) this.doc.setTitle(args.info.title)
+      if (args.info.coursetitle) this.doc.setSubject(args.info.coursetitle)
+      if (args.info.ownersdisplaynames)
+        this.doc.setAuthor(args.info.ownersdisplaynames.join(', '))
+      if (args.info.date) this.doc.setCreationDate(new Date(args.info.date))
     }
   }
 
