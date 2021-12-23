@@ -26,6 +26,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 14
+          npm-registry:
+          - registry: 'https://npm.pkg.github.com'
+            scope: '@fails-components'
+            token: '${{secrets.GITHUB_TOKEN_THIRD_PARTY}}'
       - run: npm ci
       - run: npm test
 
