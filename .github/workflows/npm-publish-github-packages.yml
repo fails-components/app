@@ -28,7 +28,12 @@ jobs:
           node-version: 14
           registry-url: https://npm.pkg.github.com/
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}      
+
       - run: npm test
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-gpr:
     needs: build
@@ -44,7 +49,10 @@ jobs:
         with:
           node-version: 14
           registry-url: https://npm.pkg.github.com/
+
       - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if version has been updated
         id: check
