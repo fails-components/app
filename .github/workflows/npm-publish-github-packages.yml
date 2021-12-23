@@ -27,9 +27,9 @@ jobs:
         with:
           node-version: 14
           npm-registry:
-          - registry: 'https://npm.pkg.github.com'
-            scope: '@fails-components'
-            token: '${{secrets.GITHUB_TOKEN_THIRD_PARTY}}'
+             - registry: 'https://npm.pkg.github.com'
+               scope: '@fails-components'
+               token: '${{secrets.GITHUB_TOKEN}}'
       - run: npm ci
       - run: npm test
 
@@ -47,6 +47,10 @@ jobs:
         with:
           node-version: 14
           registry-url: https://npm.pkg.github.com/
+          npm-registry:
+             - registry: 'https://npm.pkg.github.com'
+               scope: '@fails-components'
+               token: '${{secrets.GITHUB_TOKEN}}'
       - run: npm ci
 
       - name: Check if version has been updated
