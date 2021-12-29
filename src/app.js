@@ -316,6 +316,13 @@ class App extends Component {
               if (postcount === 50) window.clearInterval(intervalId) // if it was not loaded after 10 seconds forget about it
               postcount++
             }, 200)
+            const messageHandle = (event) => {
+              if (event && event.data && event.data.failsTokenOk) {
+                window.clearInterval(intervalId)
+                window.removeEventListener(messageHandle)
+              }
+            }
+            window.addEventListener('message', messageHandle)
           }
         }
       }
