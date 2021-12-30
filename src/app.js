@@ -119,6 +119,7 @@ class App extends Component {
     this.state.selLecture = null
     this.state.polledittext = {}
     this.state.ispolledit = {}
+    this.state.logincode = ''
 
     this.pictureupload = React.createRef()
     this.bgpdfupload = React.createRef()
@@ -155,6 +156,7 @@ class App extends Component {
     this.downloadPDF = this.downloadPDF.bind(this)
 
     this.doCopy = this.doCopy.bind(this)
+    this.doAuth = this.doAuth.bind(this)
 
     this.checkTokenRenew = this.checkTokenRenew.bind(this)
   }
@@ -393,6 +395,13 @@ class App extends Component {
               if (postcount === 50) window.clearInterval(intervalId) // if it was not loaded after 10 seconds forget about it
               postcount++
             }, 200)
+            const messageHandle = (event) => {
+              if (event && event.data && event.data.failsTokenOk) {
+                window.clearInterval(intervalId)
+                window.removeEventListener(messageHandle)
+              }
+            }
+            window.addEventListener('message', messageHandle)
           }
         }
       }
@@ -575,6 +584,33 @@ class App extends Component {
             })
         } else {
           this.getLectureDetails()
+        }
+      }
+    } catch (error) {
+      this.errorMessage(error)
+    }
+  }
+
+  async doAuth(id) {
+    console.log('doauth', id)
+    try {
+      const response = await axios.post(
+        '/lecture/auth',
+        { id: id },
+        this.axiosConfig()
+      )
+      // console.log("post response", response);
+      if (response) {
+        if (response.data.error) {
+          if (this.messages)
+            this.messages.show({
+              severity: 'error',
+              summary: 'post /app/lecture/auth failed',
+              detail: response.data.error
+            })
+        } else {
+          this.setState({ logincode: '' })
+          if (this.authop) this.authop.hide()
         }
       }
     } catch (error) {
@@ -1170,13 +1206,19 @@ class App extends Component {
                               <Button
                                 icon='pi pi-pencil'
                                 label='Notebook'
-                                className='p-m-2'
+                                className='p-m-2 p-p-1'
                                 onClick={
                                   bgpdfixed
                                     ? this.openNotebook
                                     : this.openNotebookWarn
                                 }
-                              ></Button>{' '}
+                              ></Button>
+                              <Button
+                                icon='pi pi-unlock'
+                                label='Unlock'
+                                className='p-m-2 p-p-1'
+                                onClick={(e) => this.authop.toggle(e)}
+                              ></Button>
                               {/*   <Button
                             icon='pi pi-eye'
                             label='Screencapture'
@@ -1406,6 +1448,29 @@ class App extends Component {
                 <br /> <br />
                 Build upon the shoulders of giants, see{' '}
                 <a href='/static/oss'> OSS attribution and licensing.</a>
+              </OverlayPanel>
+              <OverlayPanel
+                ref={(el) => (this.authop = el)}
+                showCloseIcon={true}
+              >
+                <h3> Login window(s)</h3>
+                <div className='p-inputgroup'>
+                  <InputText
+                    placeholder='Login code'
+                    value={this.state.logincode}
+                    onChange={(e) =>
+                      this.setState({ logincode: e.target.value })
+                    }
+                  />
+                  {this.state.logincode &&
+                    this.state.logincode.length === 7 && (
+                      <Button
+                        icon='pi pi-unlock'
+                        className='p-button-success'
+                        onClick={() => this.doAuth(this.state.logincode)}
+                      />
+                    )}
+                </div>
               </OverlayPanel>
             </ScrollPanel>
           </div>
