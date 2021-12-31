@@ -321,7 +321,7 @@ class App extends Component {
             const messageHandle = (event) => {
               if (event && event.data && event.data.failsTokenOk) {
                 window.clearInterval(intervalId)
-                window.removeEventListener(messageHandle)
+                window.removeEventListener('message', messageHandle)
               }
             }
             window.addEventListener('message', messageHandle)
@@ -385,7 +385,6 @@ class App extends Component {
             // newwindow.failspurpose = "lecture";
             // console.log("token to pass",response.data.token);
             // newwindow.failstoken = response.data.token;
-
             let postcount = 0
             const intervalId = setInterval(() => {
               newwindow.postMessage(
@@ -398,7 +397,7 @@ class App extends Component {
             const messageHandle = (event) => {
               if (event && event.data && event.data.failsTokenOk) {
                 window.clearInterval(intervalId)
-                window.removeEventListener(messageHandle)
+                window.removeEventListener('message', messageHandle)
               }
             }
             window.addEventListener('message', messageHandle)
