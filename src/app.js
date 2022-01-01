@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-import React, { Component } from 'react'
+import React, { Component, Fragment } from 'react'
 import { Button } from 'primereact/button'
 import { ProgressSpinner } from 'primereact/progressspinner'
 import { Card } from 'primereact/card'
@@ -44,6 +44,10 @@ import fileDownload from 'js-file-download'
 import { FailsConfig } from '@fails-components/config'
 import failsLogo from './logo/logo2.svg'
 import failsLogoLong from './logo/logo1.svg'
+import QrScanner from 'qr-scanner'
+// eslint-disable-next-line import/no-webpack-loader-syntax
+import QrScannerWorkerPath from '!!file-loader!../node_modules/qr-scanner/qr-scanner-worker.min.js'
+QrScanner.WORKER_PATH = QrScannerWorkerPath
 
 window.parent.postMessage(
   JSON.stringify({ subject: 'lti.frameResize', height: '90vh' }),
@@ -107,6 +111,70 @@ addLocale('de', {
   dateFormat: 'dd.mm.yy'
 })
 locale('de')
+
+class QRScan extends Component {
+  constructor(args) {
+    super(args)
+    this.state = {}
+    this.state.qron = false
+
+    this.videoele = React.createRef()
+
+    this.turnQRon = this.turnQRon.bind(this)
+  }
+
+  turnQRon() {
+    if (this.videoele.current) {
+      this.qrscan = new QrScanner(this.videoele.current, (result) => {
+        console.log('qrcode scanned', result)
+        this.props.onScan(result)
+      })
+      if (QrScanner.hasCamera()) {
+        console.log('start qr scanning')
+        this.qrscan.start()
+        this.setState({ qron: true })
+      } else {
+        console.log('no camera')
+        this.qrscan.destroy()
+        this.qrscan = null
+        this.setState({ nocamera: true })
+      }
+    }
+  }
+
+  turnQRoff() {
+    if (this.qrscan) {
+      this.qrscan.stop()
+      this.qrscan.destroy()
+      this.qrscan = null
+    }
+    this.setState({ qron: false })
+  }
+
+  componentWillUnmount() {
+    this.turnQRoff()
+  }
+
+  render() {
+    return (
+      <Fragment>
+        {this.state.nocamera && <div>No camera available</div>}
+        <video
+          ref={this.videoele}
+          style={{ display: this.state.qron ? 'block' : 'none', width: '60vw' }}
+        ></video>
+        {!this.state.qron && (
+          <Button
+            icon='pi pi-camera'
+            label='Turn on QR reader'
+            className='p-button-primary p-p-1'
+            onClick={this.turnQRon}
+          />
+        )}
+      </Fragment>
+    )
+  }
+}
 
 class App extends Component {
   constructor(args) {
@@ -183,6 +251,25 @@ class App extends Component {
       delete this.tokentimerid
     }
     this.tokentimerid = window.setInterval(this.checkTokenRenew, 1000)
+
+    // check for features
+    if (document.featurePolicy) {
+      console.log(
+        'allowed website features',
+        document.featurePolicy.allowedFeatures()
+      )
+      if (!document.featurePolicy.allowedFeatures().includes('camera')) {
+        if (!this.state.nocamera) this.setState({ nocamera: true })
+      }
+      console.log(
+        'allowed origins for feature camera',
+        document.featurePolicy.getAllowlistForFeature('camera')
+      )
+    }
+    if (!navigator.mediaDevices) {
+      console.log('no camera supported')
+      if (!this.state.nocamera) this.setState({ nocamera: true })
+    }
   }
 
   onChangeCalendar(e) {
@@ -1054,7 +1141,7 @@ class App extends Component {
           return toret
         })
       }
-      polldata.push({ id: 'ADD', type: 'add' })
+      polldata.push({ id: 'ADD', type: 'add', key: 'add' })
     }
 
     if (this.state.token && this.state.decoded_token) {
@@ -1216,7 +1303,9 @@ class App extends Component {
                                 icon='pi pi-unlock'
                                 label='Unlock'
                                 className='p-m-2 p-p-1'
-                                onClick={(e) => this.authop.toggle(e)}
+                                onClick={(e) =>
+                                  this.setState({ logindia: true })
+                                }
                               ></Button>
                               {/*   <Button
                             icon='pi pi-eye'
@@ -1448,29 +1537,44 @@ class App extends Component {
                 Build upon the shoulders of giants, see{' '}
                 <a href='/static/oss'> OSS attribution and licensing.</a>
               </OverlayPanel>
-              <OverlayPanel
-                ref={(el) => (this.authop = el)}
-                showCloseIcon={true}
+              <Dialog
+                visible={this.state.logindia}
+                onHide={() => this.setState({ logindia: false })}
+                showHeader={false}
               >
                 <h3> Login window(s)</h3>
-                <div className='p-inputgroup'>
-                  <InputText
-                    placeholder='Login code'
-                    value={this.state.logincode}
-                    onChange={(e) =>
-                      this.setState({ logincode: e.target.value })
-                    }
-                  />
-                  {this.state.logincode &&
-                    this.state.logincode.length === 7 && (
-                      <Button
-                        icon='pi pi-unlock'
-                        className='p-button-success'
-                        onClick={() => this.doAuth(this.state.logincode)}
-                      />
+                <div className='p-d-flex p-flex-column'>
+                  <div className='p-mb-2 p-as-center'>
+                    {!this.state.nocamera && (
+                      <QRScan onScan={this.doAuth}></QRScan>
                     )}
+                  </div>
+                  <div className='p-mb-2 p-as-centers'>
+                    <div className='p-inputgroup'>
+                      <InputText
+                        placeholder='Login code'
+                        value={this.state.logincode}
+                        onChange={(e) =>
+                          this.setState({ logincode: e.target.value })
+                        }
+                      />
+                      {this.state.logincode &&
+                        this.state.logincode.length === 7 && (
+                          <Button
+                            icon='pi pi-unlock'
+                            className='p-button-success'
+                            onClick={() => this.doAuth(this.state.logincode)}
+                          />
+                        )}
+                      <Button
+                        icon='pi pi-times'
+                        className='p-button-danger'
+                        onClick={() => this.setState({ logindia: false })}
+                      />
+                    </div>
+                  </div>
                 </div>
-              </OverlayPanel>
+              </Dialog>
             </ScrollPanel>
           </div>
         )}
