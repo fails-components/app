@@ -31,8 +31,8 @@ import {
   rgb,
   /*  pushGraphicsState,
   rectangle,
-  clip, */
-  popGraphicsState,
+  clip, 
+  popGraphicsState, */
   PageSizes
 } from 'pdf-lib'
 import tinycolor from 'tinycolor2'
@@ -185,10 +185,10 @@ export class PDFGenerator extends DrawObjectContainer {
 
     this.pagenumber++
 
-    page.pushOperators(
+    /* page.pushOperators(
       // unclips
       popGraphicsState()
-    )
+    ) */
     this.objects = []
     this.workobj = {}
   }
