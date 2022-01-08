@@ -294,7 +294,7 @@ class App extends Component {
     try {
       const response = await axios.get('/lecture/pdfdata', {
         ...this.axiosConfig(),
-        params: params
+        params
       })
       if (response) {
         if (response.data.error) {
@@ -682,7 +682,7 @@ class App extends Component {
     try {
       const response = await axios.post(
         '/lecture/auth',
-        { id: id },
+        { id },
         this.axiosConfig()
       )
       // console.log("post response", response);

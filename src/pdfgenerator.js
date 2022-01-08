@@ -180,7 +180,7 @@ export class PDFGenerator extends DrawObjectContainer {
       color: rgb(0, 0, 0),
       lineHeight: 10,
       opacity: 1.0,
-      maxWidth: maxWidth
+      maxWidth
     })
 
     this.pagenumber++
