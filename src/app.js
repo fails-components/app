@@ -41,6 +41,7 @@ import Pica from 'pica'
 import ImageBlobReduce from 'image-blob-reduce'
 import { PDFGenerator } from './pdfgenerator'
 import fileDownload from 'js-file-download'
+import { UAParser } from 'ua-parser-js'
 import { FailsConfig } from '@fails-components/config'
 import failsLogo from './logo/logo2.svg'
 import failsLogoLong from './logo/logo1.svg'
@@ -1159,6 +1160,7 @@ class App extends Component {
         joinlecture = true
       }
     }
+    const uaparser = new UAParser()
 
     return (
       <React.Fragment>
@@ -1524,7 +1526,6 @@ class App extends Component {
                     2021- (FAILS Components) Marten Richter
                   </div>
                 </div>
-                App version {process.env.REACT_APP_VERSION} <br /> <br />
                 FAILS logo by chadkills <br />
                 Custom icons by icon_xpert786 <br /> <br />
                 Released under GNU Affero General Public License Version 3.{' '}
@@ -1536,6 +1537,12 @@ class App extends Component {
                 <br /> <br />
                 Build upon the shoulders of giants, see{' '}
                 <a href='/static/oss'> OSS attribution and licensing.</a>
+                <br /> <br />
+                App version {process.env.REACT_APP_VERSION} <br /> Browser:{' '}
+                {uaparser.getBrowser().name} (Version:{' '}
+                {uaparser.getBrowser().version}) with Engine:{' '}
+                {uaparser.getEngine().name} (Version:{' '}
+                {uaparser.getEngine().version})
               </OverlayPanel>
               <Dialog
                 visible={this.state.logindia}
