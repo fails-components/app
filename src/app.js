@@ -348,6 +348,21 @@ class App extends Component {
     console.log('open studentnotes')
 
     try {
+      console.log('debug target url config', cfg.getURL('web'))
+      let targeturl = cfg.getURL('web')
+      if (targeturl[0] === '/')
+        targeturl =
+          window.location.protocol +
+          '//' +
+          window.location.hostname +
+          (window.location.port !== '' ? ':' + window.location.port : '') +
+          targeturl
+      console.log('debug target url', targeturl)
+
+      const newwindow = window.open(
+        targeturl /* +"?token="+response.data.token */,
+        '_blank'
+      )
       const response = await axios.get(
         '/lecture/studenttoken',
         this.axiosConfig()
@@ -359,6 +374,7 @@ class App extends Component {
             summary: 'get /app/lecture/studenttoken failed',
             detail: response.data.error
           })
+          newwindow.close()
         } else {
           this.messages.show({
             severity: 'info',
@@ -368,22 +384,6 @@ class App extends Component {
           /* console.log("Notes data", response.data);
           console.log("processenv", process.env);
           console.log("URL", process.env.REACT_APP_NOTEPAD_BASE_URL); */
-
-          console.log('debug target url config', cfg.getURL('web'))
-          let targeturl = cfg.getURL('web')
-          if (targeturl[0] === '/')
-            targeturl =
-              window.location.protocol +
-              '//' +
-              window.location.hostname +
-              (window.location.port !== '' ? ':' + window.location.port : '') +
-              targeturl
-          console.log('debug target url', targeturl)
-
-          const newwindow = window.open(
-            targeturl /* +"?token="+response.data.token */,
-            '_blank'
-          )
 
           if (!newwindow) {
             this.messages.show({
@@ -425,6 +425,21 @@ class App extends Component {
     console.log('open notebook')
 
     try {
+      console.log('debug target url config', cfg.getURL('web'))
+      let targeturl = cfg.getURL('web')
+      if (targeturl[0] === '/')
+        targeturl =
+          window.location.protocol +
+          '//' +
+          window.location.hostname +
+          (window.location.port !== '' ? ':' + window.location.port : '') +
+          targeturl
+      console.log('debug target url', targeturl)
+      const newwindow = window.open(
+        targeturl /* +"?token="+response.data.token */,
+        '_blank'
+      )
+
       const response = await axios.get(
         '/lecture/notepadtoken',
         this.axiosConfig()
@@ -436,6 +451,7 @@ class App extends Component {
             summary: 'get /app/lecture/notepadtoken failed',
             detail: response.data.error
           })
+          newwindow.close()
         } else {
           this.messages.show({
             severity: 'info',
@@ -445,22 +461,6 @@ class App extends Component {
           /* console.log("Notebook data", response.data);
           console.log("processenv", process.env);
           console.log("URL", process.env.REACT_APP_NOTEPAD_BASE_URL); */
-
-          console.log('debug target url config', cfg.getURL('web'))
-          let targeturl = cfg.getURL('web')
-          if (targeturl[0] === '/')
-            targeturl =
-              window.location.protocol +
-              '//' +
-              window.location.hostname +
-              (window.location.port !== '' ? ':' + window.location.port : '') +
-              targeturl
-          console.log('debug target url', targeturl)
-
-          const newwindow = window.open(
-            targeturl /* +"?token="+response.data.token */,
-            '_blank'
-          )
 
           if (!newwindow) {
             this.messages.show({
