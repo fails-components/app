@@ -15,8 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - run: git config --global user.name 'Fails maintenance bot'
       - run: git config --global user.email 'marten.richter@freenet.de'
       - run: npx browserslist@latest --update-db --yes
