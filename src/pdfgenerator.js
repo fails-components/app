@@ -24,7 +24,6 @@ import {
   DrawArea3,
   Dispatcher
 } from '@fails-components/data'
-// eslint-disable-next-line no-unused-vars
 import {
   PDFDocument,
   StandardFonts,
@@ -85,6 +84,16 @@ export class PDFGenerator extends DrawObjectContainer {
     args.boards.forEach((el) => {
       this.collection.replaceStoredData(el.name, base64Toab(el.data)) // what is the data? really base64
     })
+
+    if (args.boardsnotes) {
+      this.collectionnotes = new Collection(
+        (num, dummy) => new MemContainer(num, dummy),
+        {}
+      )
+      args.boardsnotes.forEach((el) => {
+        this.collectionnotes.replaceStoredData(el.name, el.data) // what is the data? really base64
+      })
+    }
   }
 
   async initPDF(args) {
@@ -278,25 +287,43 @@ export class PDFGenerator extends DrawObjectContainer {
           })
         }
       } else if (obj.type === 'image') {
-        const imagedata = await fetch(obj.url).then((res) => res.arrayBuffer())
-        let image
-        if (obj.mimetype === 'image/jpeg') {
-          image = await this.doc.embedJpg(imagedata)
-        } else if (obj.mimetype === 'image/png') {
-          image = await this.doc.embedPng(imagedata)
-        } else {
-          console.log('unsupported mimetype')
+        try {
+          const imagedata = await fetch(obj.url).then((res) =>
+            res.arrayBuffer()
+          )
+          let image
+          if (obj.mimetype === 'image/jpeg') {
+            image = await this.doc.embedJpg(imagedata)
+          } else if (obj.mimetype === 'image/png') {
+            image = await this.doc.embedPng(imagedata)
+          } else {
+            console.log('unsupported mimetype')
+          }
+          page.drawImage(image, {
+            x: this.margins + obj.posx * geoscale,
+            y:
+              this.margins +
+              this.upageheight +
+              -obj.posy * geoscale -
+              obj.height * geoscale,
+            width: obj.width * geoscale,
+            height: obj.height * geoscale
+          })
+        } catch (error) {
+          page.drawText('Failure downloading image: ' + obj.url, {
+            x: this.margins + obj.posx * geoscale,
+            y:
+              this.margins +
+              this.upageheight +
+              -obj.posy * geoscale -
+              obj.height * geoscale,
+            size: 8,
+            color: rgb(0, 0, 0),
+            lineHeight: 10,
+            opacity: 1.0
+          })
+          console.log('Fail to download image', error)
         }
-        page.drawImage(image, {
-          x: this.margins + obj.posx * geoscale,
-          y:
-            this.margins +
-            this.upageheight +
-            -obj.posy * geoscale -
-            obj.height * geoscale,
-          width: obj.width * geoscale,
-          height: obj.height * geoscale
-        })
       } else {
         console.log('unknown type', obj.type)
       }
@@ -342,6 +369,11 @@ export class PDFGenerator extends DrawObjectContainer {
     const drawarea = new DrawArea3()
     this.collection.redrawTo(drawarea) // we determine possible positions for page breaks
     drawarea.calculateWeights()
+    let drawareanotes
+    if (this.collectionnotes) {
+      drawareanotes = new DrawArea3()
+      this.collectionnotes.redrawTo(drawareanotes)
+    }
     // now we create, the pdfs
 
     const dispatch = new Dispatcher()
@@ -353,8 +385,12 @@ export class PDFGenerator extends DrawObjectContainer {
     if (this.backgroundpdf) {
       pdfpages = this.doc.getPages()
     }
+    let glomaxnotes = 0
+    if (drawareanotes) {
+      glomaxnotes = drawareanotes.glomax
+    }
 
-    while (pagepos <= drawarea.glomax) {
+    while (pagepos <= Math.max(drawarea.glomax, glomaxnotes)) {
       let page
       let pagebreak
 
@@ -382,6 +418,13 @@ export class PDFGenerator extends DrawObjectContainer {
         Math.floor(pagepos),
         Math.ceil(pagebreak)
       )
+      if (this.collectionnotes) {
+        this.collectionnotes.redrawTo(
+          dispatch,
+          Math.floor(pagepos),
+          Math.ceil(pagebreak)
+        )
+      }
       await this.processPageDrawings()
       this.endPage()
       pagepos = pagebreak

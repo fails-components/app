@@ -45,6 +45,7 @@ import { UAParser } from 'ua-parser-js'
 import { FailsConfig } from '@fails-components/config'
 import failsLogo from './logo/logo2.svg'
 import failsLogoLong from './logo/logo1.svg'
+import Dexie from 'dexie'
 import QrScanner from 'qr-scanner'
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import QrScannerWorkerPath from '!!file-loader!../node_modules/qr-scanner/qr-scanner-worker.min.js'
@@ -177,6 +178,34 @@ class QRScan extends Component {
   }
 }
 
+class DBManager {
+  static manager = undefined
+  constructor() {
+    this.db = new Dexie('FailsDatabase')
+    this.db.version(1).stores({
+      lectures: 'uuid, title, coursetitle', // also includes boards
+      lectureboards: 'uuidboard, uuid, board'
+    })
+  }
+
+  async getLecture(uuid) {
+    return await this.db.lectures.get(uuid)
+  }
+
+  async getBoards(uuid) {
+    return await this.db.lectureboards
+      .where('uuid')
+      .equals(uuid)
+      .sortBy('board')
+  }
+
+  static getDBManager() {
+    if (DBManager.manager) return DBManager.manager
+    DBManager.manager = new DBManager()
+    return DBManager.manager
+  }
+}
+
 class App extends Component {
   constructor(args) {
     super(args)
@@ -189,6 +218,7 @@ class App extends Component {
     this.state.polledittext = {}
     this.state.ispolledit = {}
     this.state.logincode = ''
+    this.state.incllectnotes = true
 
     this.pictureupload = React.createRef()
     this.bgpdfupload = React.createRef()
@@ -199,8 +229,8 @@ class App extends Component {
       const pair = search.split('&').find((el) => el.split('=')[0] === 'token')
       if (pair) this.state.token = pair.split('=')[1]
       if (this.state.token)
-        this.state.decoded_token = jwt_decode(this.state.token)
-      console.log('this.state.decoded', this.state.decoded_token)
+        this.state.decodedtoken = jwt_decode(this.state.token)
+      console.log('this.state.decoded', this.state.decodedtoken)
     }
 
     this.pollTemplate = this.pollTemplate.bind(this)
@@ -238,11 +268,13 @@ class App extends Component {
 
   componentDidMount() {
     this.renewToken()
-    this.getLectureDetails()
+    this.getLectureDetails().catch((error) =>
+      console.log('Problem get Lectdetails:', error)
+    )
 
     if (
-      this.state.decoded_token &&
-      this.state.decoded_token.role.includes('instructor')
+      this.state.decodedtoken &&
+      this.state.decodedtoken.role.includes('instructor')
     ) {
       this.getLectures()
     }
@@ -288,7 +320,7 @@ class App extends Component {
       })
   }
 
-  async pdfGenerate(color, lectureuuid) {
+  async pdfGenerate({ color, lectureuuid }) {
     this.setState({ pdfgenerate: { message: 'Load data...' } })
     const params = {}
     if (lectureuuid) params.lectureuuid = lectureuuid
@@ -308,9 +340,22 @@ class App extends Component {
           this.setState({
             pdfgenerate: { message: 'Start generating PDF...please wait...' }
           })
-          console.log('log pdf generate data', response.data)
           response.data.color = color
-          const pdfgen = new PDFGenerator(response.data)
+          const pdfargs = { ...response.data }
+          if (this.state.haslectnotes && this.state.incllectnotes) {
+            const dbman = DBManager.getDBManager()
+            const boards = await dbman.getBoards(
+              lectureuuid || this.state?.decodedtoken?.course?.lectureuuid
+            )
+            if (boards) {
+              pdfargs.boardsnotes = boards.map((el) => ({
+                name: el.board,
+                data: el.boarddata
+              }))
+            }
+          }
+
+          const pdfgen = new PDFGenerator(pdfargs)
           await pdfgen.initPDF(response.data)
           const mypdf = await pdfgen.createPDF()
           this.setState({
@@ -342,6 +387,20 @@ class App extends Component {
       accept: this.openNotebook,
       reject: () => {} // do nothing
     })
+  }
+
+  getAppURL() {
+    let targeturl = cfg.getURL('appweb')
+    if (targeturl[0] === '/')
+      targeturl =
+        window.location.protocol +
+        '//' +
+        window.location.hostname +
+        (window.location.port !== '' ? ':' + window.location.port : '') +
+        targeturl
+    const appurl = targeturl + '?token=' + this.state.token
+    console.log('appurl', appurl)
+    return appurl
   }
 
   async openStudentNotes() {
@@ -544,7 +603,9 @@ class App extends Component {
         console.log("picture col", { filename: picture.name, picture: blob, thumbnail: thumbnail }); */
 
         if (this.pictureupload.current) this.pictureupload.current.clear()
-        this.getLectureDetails()
+        this.getLectureDetails().catch((error) =>
+          console.log('Problem get Lectdetails:', error)
+        )
       } catch (error) {
         this.errorMessage(error)
       }
@@ -601,7 +662,9 @@ class App extends Component {
       }
 
       if (this.bgpdfupload.current) this.bgpdfupload.current.clear()
-      this.getLectureDetails()
+      this.getLectureDetails().catch((error) =>
+        console.log('Problem get Lectdetails:', error)
+      )
     } catch (error) {
       this.errorMessage(error)
     }
@@ -639,13 +702,15 @@ class App extends Component {
                   detail: response.data.error
                 })
             } else {
+              const decodedtoken = jwt_decode(response.data.token)
               console.log('token details', response.data.token)
               // console.log(moment.unix(jwt_decode(response.data.token).exp,"x").format() );
-              this.tokentimeout = moment.unix(
-                jwt_decode(response.data.token).exp,
-                'x'
-              )
-              this.setState({ token: response.data.token, showrenew: false })
+              this.tokentimeout = moment.unix(decodedtoken.exp, 'x')
+              this.setState({
+                token: response.data.token,
+                decodedtoken,
+                showrenew: false
+              })
             }
           }
         }.bind(this)
@@ -670,7 +735,9 @@ class App extends Component {
               detail: response.data.error
             })
         } else {
-          this.getLectureDetails()
+          this.getLectureDetails().catch((error) =>
+            console.log('Problem get Lectdetails:', error)
+          )
         }
       }
     } catch (error) {
@@ -719,7 +786,9 @@ class App extends Component {
               detail: response.data.error
             })
         } else {
-          this.getLectureDetails()
+          this.getLectureDetails().catch((error) =>
+            console.log('Problem get Lectdetails:', error)
+          )
         }
       }
     } catch (error) {
@@ -728,6 +797,7 @@ class App extends Component {
   }
 
   async getLectureDetails() {
+    let uuid
     try {
       const response = await axios.get('/lecture', this.axiosConfig())
       if (response) {
@@ -738,13 +808,23 @@ class App extends Component {
               summary: 'get /app/lecture failed',
               detail: response.data.error
             })
-        } else {
-          console.log('lecture details', response.data)
-          this.setState({ lectdetail: response.data })
+          return
         }
+        console.log('lecture details', response.data)
+        uuid = response.data.uuid
+        this.setState({ lectdetail: response.data })
       }
     } catch (error) {
       this.errorMessage(error)
+    }
+    if (uuid) {
+      const dbman = DBManager.getDBManager()
+      try {
+        const lect = await dbman.getLecture(uuid)
+        this.setState({ haslectnotes: !!lect })
+      } catch (error) {
+        console.log('Problem opening db:', error)
+      }
     }
   }
 
@@ -1145,22 +1225,23 @@ class App extends Component {
       polldata.push({ id: 'ADD', type: 'add', key: 'add' })
     }
 
-    if (this.state.token && this.state.decoded_token) {
-      displayname = this.state.decoded_token.user.displayname
-      // coursename=this.state.decoded_token.course.coursetitle; // may be move to lecture details
-      // lecturename=this.state.decoded_token.course.title; // may be move to lecture details
-      if (this.state.decoded_token.role.includes('instructor')) {
+    if (this.state.token && this.state.decodedtoken) {
+      displayname = this.state.decodedtoken.user.displayname
+      // coursename=this.state.decodedtoken.course.coursetitle; // may be move to lecture details
+      // lecturename=this.state.decodedtoken.course.title; // may be move to lecture details
+      if (this.state.decodedtoken.role.includes('instructor')) {
         startlecture = true
         if (this.state.lectures && this.state.lectures.length > 1)
           pastlectures = true
         polls = true
         pictures = true
       }
-      if (this.state.decoded_token.role.includes('audience')) {
+      if (this.state.decodedtoken.role.includes('audience')) {
         joinlecture = true
       }
     }
     const uaparser = new UAParser()
+    const inIframe = window.location !== window.parent.location
 
     return (
       <React.Fragment>
@@ -1363,15 +1444,40 @@ class App extends Component {
                           icon='pi pi-file'
                           label='PDF color'
                           className='p-m-2'
-                          onClick={() => this.pdfGenerate(true)}
+                          onClick={() => this.pdfGenerate({ color: true })}
                         ></Button>
                         &nbsp;
                         <Button
                           icon='pi pi-file'
                           label='PDF sw'
                           className='p-m-2'
-                          onClick={() => this.pdfGenerate(false)}
+                          onClick={() => this.pdfGenerate({ color: false })}
                         ></Button>
+                        {this.state.haslectnotes && (
+                          <ToggleButton
+                            onIcon='pi pi-pencil'
+                            offIcon='pi pi-pencil'
+                            checked={this.state.incllectnotes}
+                            className='p-m-2 p-p-1'
+                            onLabel='with notes'
+                            offLabel='w/o notes'
+                            onChange={(e) =>
+                              this.setState({ incllectnotes: e.value })
+                            }
+                          />
+                        )}
+                        {!this.state.haslectnotes &&
+                          uaparser.getEngine().name === 'WebKit' &&
+                          inIframe && (
+                            <Button
+                              href={this.getAppURL()}
+                              className='p-button-text p-button-sm p-button-outlined'
+                              label='For your notes on Safari/WebKit press this link for fullpage.'
+                              onClick={() =>
+                                window.open(this.getAppURL(), '_blank')
+                              }
+                            />
+                          )}
                       </Card>
                     </div>
 
@@ -1477,10 +1583,10 @@ class App extends Component {
                                   label='PDF'
                                   className='p-m-2'
                                   onClick={() =>
-                                    this.pdfGenerate(
-                                      true,
-                                      this.state.selLecture
-                                    )
+                                    this.pdfGenerate({
+                                      color: true,
+                                      lectureuuid: this.state.selLecture
+                                    })
                                   }
                                 ></Button>
                               </div>{' '}
