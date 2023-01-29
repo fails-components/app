@@ -312,7 +312,7 @@ class App extends Component {
           this.messages.show({
             severity: 'info',
             sticky: true,
-            summary: 'Adminstrative message',
+            summary: 'Administrative message',
             detail: config.maintenance.message
           })
         }
@@ -1553,17 +1553,19 @@ class App extends Component {
                     {this.state.support && (
                       <div className='p-col-12 p-md-6'>
                         <Card title='Support information'>
-                          {this.state.support.text || ''}
+                          {<div>{this.state.support.text} </div> || ''}
                           {this.state.support.url && (
-                            <Button
-                              icon='pi pi-info-circle'
-                              href={this.state.support.url}
-                              label='Support page'
-                              className='p-m-2'
-                              onClick={() =>
-                                window.open(this.state.support.url, '_blank')
-                              }
-                            ></Button>
+                            <div>
+                              <Button
+                                icon='pi pi-info-circle'
+                                href={this.state.support.url}
+                                label='Support page'
+                                className='p-m-2'
+                                onClick={() =>
+                                  window.open(this.state.support.url, '_blank')
+                                }
+                              ></Button>
+                            </div>
                           )}
                         </Card>
                       </div>
