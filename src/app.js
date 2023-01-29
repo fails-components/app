@@ -303,6 +303,32 @@ class App extends Component {
       console.log('no camera supported')
       if (!this.state.nocamera) this.setState({ nocamera: true })
     }
+    // check for maintenance messages
+    axios({ url: '/config/app.json', baseURL: '/' })
+      .then((res) => {
+        const config = res.data
+        console.log('We got an app config', config)
+        if (config?.maintenance?.message) {
+          this.messages.show({
+            severity: 'info',
+            sticky: true,
+            summary: 'Adminstrative message',
+            detail: config.maintenance.message
+          })
+        }
+        if (config?.support) {
+          const { text, url } = config.support
+          if (text || url) {
+            this.setState({ support: { text, url } })
+          }
+        }
+      })
+      .catch((error) => {
+        console.log(
+          'Get config/app.json problem/not found, this must not be an error',
+          error
+        )
+      })
   }
 
   onChangeCalendar(e) {
@@ -1487,7 +1513,6 @@ class App extends Component {
                           )}
                       </Card>
                     </div>
-
                     {pictures && (
                       <div className='p-col-12 p-md-6'>
                         <Card title='Pictures'>
@@ -1522,6 +1547,24 @@ class App extends Component {
                               />
                             </div>
                           </div>
+                        </Card>
+                      </div>
+                    )}
+                    {this.state.support && (
+                      <div className='p-col-12 p-md-6'>
+                        <Card title='Support information'>
+                          {this.state.support.text || ''}
+                          {this.state.support.url && (
+                            <Button
+                              icon='pi pi-info-circle'
+                              href={this.state.support.url}
+                              label='Support page'
+                              className='p-m-2'
+                              onClick={() =>
+                                window.open(this.state.support.url, '_blank')
+                              }
+                            ></Button>
+                          )}
                         </Card>
                       </div>
                     )}
