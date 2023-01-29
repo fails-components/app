@@ -568,7 +568,14 @@ class App extends Component {
       // ok fine we have now to generate a thumbnail
       try {
         const picture = input.files[0]
-        const blob = await fetch(picture.objectURL).then((r) => r.blob())
+        const supportedMime = ['image/jpeg', 'image/png']
+        let blob
+        if (supportedMime.includes(picture.type)) {
+          blob = await fetch(picture.objectURL).then((r) => r.blob())
+        } else {
+          // use reduce as image converter
+          blob = await reduce.toBlob(picture, { max: 1920 })
+        }
         const thumbnail = await reduce.toBlob(picture, { max: 100 })
 
         const data = new FormData()
