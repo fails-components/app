@@ -46,6 +46,7 @@ import { FailsConfig } from '@fails-components/config'
 import failsLogo from './logo/logo2.svg'
 import failsLogoLong from './logo/logo1.svg'
 import Dexie from 'dexie'
+import JSZip from 'jszip'
 import QrScanner from 'qr-scanner'
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import QrScannerWorkerPath from '!!file-loader!../node_modules/qr-scanner/qr-scanner-worker.min.js'
@@ -219,6 +220,10 @@ class App extends Component {
     this.state.ispolledit = {}
     this.state.logincode = ''
     this.state.incllectnotes = true
+    this.state.hiddensupport = false
+    // next line is for lazy developers
+    // this.state.hiddensupport = true
+    this.supportactivate = ''
 
     this.pictureupload = React.createRef()
     this.bgpdfupload = React.createRef()
@@ -346,8 +351,8 @@ class App extends Component {
       })
   }
 
-  async pdfGenerate({ color, lectureuuid }) {
-    this.setState({ pdfgenerate: { message: 'Load data...' } })
+  async downloadRawData({ lectureuuid }) {
+    this.setState({ pdfgenerate: { message: 'Load data...', filetype: 'RAW' } })
     const params = {}
     if (lectureuuid) params.lectureuuid = lectureuuid
     try {
@@ -363,12 +368,88 @@ class App extends Component {
             detail: response.data.error
           })
         } else {
+          console.log('data', response.data)
+          const data = response.data
+          const usedpictures = data.info?.usedpictures
+          // remove url
+          if (usedpictures)
+            data.info.usedpictures = usedpictures.map((el) => ({
+              ...el,
+              url: undefined,
+              urlthumb: undefined
+            }))
+          if (data?.info?.backgroundpdf) {
+            data.info.backgroundpdf = {
+              ...data?.info?.backgroundpdf,
+              url: undefined
+            }
+          }
+
+          const zip = new JSZip()
+          zip.file('info.json', JSON.stringify(data.info, null, 2))
+          if (data.boards)
+            data.boards.forEach((el) => {
+              zip.file(el.name + '.json', JSON.stringify(el, null, 2))
+            })
+          // now download all pictures
+          await Promise.all(
+            usedpictures.map(async (el) => {
+              const data = await fetch(el.url)
+              zip.file('assets/' + el.sha, data.arrayBuffer())
+            })
+          )
+          if (data.backgroundpdf && !data.backgroundpdf.none) {
+            const content = await fetch(data.backgroundpdf.url)
+            zip.file('assets/' + data.backgroundpdf.sha, content.arrayBuffer())
+          }
           this.setState({
-            pdfgenerate: { message: 'Start generating PDF...please wait...' }
+            pdfgenerate: {
+              message: 'Creating zip file... please wait...',
+              filetype: 'RAW'
+            }
           })
+          const zipfile = await zip.generateAsync({ type: 'uint8array' })
+
+          this.setState({
+            pdfgenerate: {
+              message: 'RAW zip file generated!',
+              zip: zipfile,
+              filetype: 'RAW'
+            }
+          })
+        }
+      }
+    } catch (error) {
+      this.errorMessage(error)
+    }
+  }
+
+  async pdfGenerate({ color, lectureuuid }) {
+    this.setState({ pdfgenerate: { message: 'Load data...', filetype: 'PDF' } })
+    const params = {}
+    if (lectureuuid) params.lectureuuid = lectureuuid
+    try {
+      const response = await axios.get('/lecture/pdfdata', {
+        ...this.axiosConfig(),
+        params
+      })
+      if (response) {
+        if (response.data.error) {
+          this.messages.show({
+            severity: 'error',
+            summary: 'get /app/lecture/pdfdata failed',
+            detail: response.data.error
+          })
+        } else {
           response.data.color = color
           const pdfargs = { ...response.data }
           if (this.state.haslectnotes && this.state.incllectnotes) {
+            this.setState({
+              pdfgenerate: {
+                message: 'Fetch student notes...please wait...',
+                filetype: 'PDF'
+              }
+            })
             const dbman = DBManager.getDBManager()
             const boards = await dbman.getBoards(
               lectureuuid || this.state?.decodedtoken?.course?.lectureuuid
@@ -380,12 +461,30 @@ class App extends Component {
               }))
             }
           }
+          this.setState({
+            pdfgenerate: {
+              message: 'Start generating PDF...please wait...',
+              filetype: 'PDF'
+            }
+          })
+          pdfargs.statusCB = (page) => {
+            this.setState({
+              pdfgenerate: {
+                message: '\nGenerating page: ' + page,
+                filetype: 'PDF'
+              }
+            })
+          }
 
           const pdfgen = new PDFGenerator(pdfargs)
           await pdfgen.initPDF(response.data)
           const mypdf = await pdfgen.createPDF()
           this.setState({
-            pdfgenerate: { message: 'PDF generated!', pdf: mypdf }
+            pdfgenerate: {
+              message: 'PDF generated!',
+              pdf: mypdf,
+              filetype: 'PDF'
+            }
           })
         }
       }
@@ -395,13 +494,21 @@ class App extends Component {
   }
 
   downloadPDF() {
-    if (!this.state.pdfgenerate || !this.state.pdfgenerate.pdf) return
+    if (!this.state.pdfgenerate) return
 
-    const theblob = new Blob([this.state.pdfgenerate.pdf], {
-      type: 'application/pdf'
-    })
-    fileDownload(theblob, 'lecture.pdf')
-    this.setState({ pdfgenerate: null })
+    if (this.state.pdfgenerate.pdf) {
+      const theblob = new Blob([this.state.pdfgenerate.pdf], {
+        type: 'application/pdf'
+      })
+      fileDownload(theblob, 'lecture.pdf')
+      this.setState({ pdfgenerate: null })
+    } else if (this.state.pdfgenerate.zip) {
+      const theblob = new Blob([this.state.pdfgenerate.zip], {
+        type: 'application/zip'
+      })
+      fileDownload(theblob, 'lecture.zip')
+      this.setState({ pdfgenerate: null })
+    }
   }
 
   openNotebookWarn(event) {
@@ -1321,12 +1428,12 @@ class App extends Component {
 
         {this.state.pdfgenerate && (
           <Dialog
-            header='PDF generation'
+            header={this.state.pdfgenerate.filetype + ' generation'}
             closable={false}
             style={{ width: '30vw' }}
             visible={this.state.pdfgenerate}
             footer={
-              this.state.pdfgenerate.pdf ? (
+              this.state.pdfgenerate.pdf || this.state.pdfgenerate.zip ? (
                 <Button
                   label='Download'
                   className='p-m-2'
@@ -1346,8 +1453,12 @@ class App extends Component {
                 />
               </div>
               <div className='p-col-9'>
-                <p>The system is generating PDF. </p>
-                <p>Current status is: {this.state.pdfgenerate.message} </p>
+                <p>
+                  The system is generating {this.state.pdfgenerate.filetype}.{' '}
+                </p>
+                <p>
+                  Current status is: <br /> {this.state.pdfgenerate.message}{' '}
+                </p>
               </div>
             </div>
           </Dialog>
@@ -1561,11 +1672,34 @@ class App extends Component {
                                 href={this.state.support.url}
                                 label='Support page'
                                 className='p-m-2'
-                                onClick={() =>
-                                  window.open(this.state.support.url, '_blank')
-                                }
+                                onClick={(event) => {
+                                  if (event.ctrlKey) {
+                                    this.setState({ hiddensupport: true })
+                                  } else {
+                                    window.open(
+                                      this.state.support.url,
+                                      '_blank'
+                                    )
+                                  }
+                                }}
                               ></Button>
                             </div>
+                          )}
+                          {this.state.hiddensupport && (
+                            <Fragment>
+                              <div>
+                                Uuid:{' '}
+                                {this.state?.decodedtoken?.course?.lectureuuid}
+                              </div>
+                              <div>
+                                <Button
+                                  icon='pi pi-cloud-download'
+                                  label='RAW data'
+                                  className='p-m-2'
+                                  onClick={() => this.downloadRawData({})}
+                                ></Button>
+                              </div>
+                            </Fragment>
                           )}
                         </Card>
                       </div>
@@ -1641,7 +1775,21 @@ class App extends Component {
                                     })
                                   }
                                 ></Button>
-                              </div>{' '}
+                              </div>
+                              {this.state.hiddensupport && (
+                                <div className='p-col-3'>
+                                  <Button
+                                    icon='pi pi-cloud-download'
+                                    label='RAW'
+                                    className='p-m-2'
+                                    onClick={() =>
+                                      this.downloadRawData({
+                                        lectureuuid: this.state.selLecture
+                                      })
+                                    }
+                                  ></Button>
+                                </div>
+                              )}
                             </div>
                           )}
                         </Card>

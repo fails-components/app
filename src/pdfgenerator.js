@@ -65,6 +65,7 @@ export class PDFGenerator extends DrawObjectContainer {
     this.firstpage = true
     this.pagenumber = 1
     // this.setupGeometry();
+    this.statusCB = args.statusCB
 
     console.log('args logger pdf', args)
     if (
@@ -389,10 +390,15 @@ export class PDFGenerator extends DrawObjectContainer {
     if (drawareanotes) {
       glomaxnotes = drawareanotes.glomax
     }
+    let pagenum = 1
 
     while (pagepos <= Math.max(drawarea.glomax, glomaxnotes)) {
       let page
       let pagebreak
+      if (this.statusCB) {
+        console.log('Status cb', pagenum)
+        this.statusCB(pagenum)
+      }
 
       if (!this.backgroundpdf || pdfpagepos >= pdfpages.length) {
         page = this.page = this.doc.addPage(PageSizes.A4)
@@ -428,6 +434,7 @@ export class PDFGenerator extends DrawObjectContainer {
       await this.processPageDrawings()
       this.endPage()
       pagepos = pagebreak
+      pagenum++
     }
 
     return this.doc.save()
