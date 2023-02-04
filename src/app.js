@@ -45,6 +45,8 @@ import { UAParser } from 'ua-parser-js'
 import { FailsConfig } from '@fails-components/config'
 import failsLogo from './logo/logo2.svg'
 import failsLogoLong from './logo/logo1.svg'
+import failsLogoExp from './logo/logo2exp.svg'
+import failsLogoLongExp from './logo/logo1exp.svg'
 import Dexie from 'dexie'
 import JSZip from 'jszip'
 import QrScanner from 'qr-scanner'
@@ -233,9 +235,16 @@ class App extends Component {
       const search = window.location.search.substring(1) // skip ?
       const pair = search.split('&').find((el) => el.split('=')[0] === 'token')
       if (pair) this.state.token = pair.split('=')[1]
-      if (this.state.token)
+      if (this.state.token) {
         this.state.decodedtoken = jwt_decode(this.state.token)
+        axios.defaults.baseURL = cfg.getURL(
+          'app',
+          this.state.decodedtoken.appversion
+        )
+        this.state.requestappversion = this.state.decodedtoken.appversion
+      }
       console.log('this.state.decoded', this.state.decodedtoken)
+      console.log('pathname', window.location.pathname)
     }
 
     this.pollTemplate = this.pollTemplate.bind(this)
@@ -523,7 +532,7 @@ class App extends Component {
   }
 
   getAppURL() {
-    let targeturl = cfg.getURL('appweb')
+    let targeturl = cfg.getURL('appweb', this.state?.decodedtoken?.appversion)
     if (targeturl[0] === '/')
       targeturl =
         window.location.protocol +
@@ -540,8 +549,11 @@ class App extends Component {
     console.log('open studentnotes')
 
     try {
-      console.log('debug target url config', cfg.getURL('web'))
-      let targeturl = cfg.getURL('web')
+      console.log(
+        'debug target url config',
+        cfg.getURL('web', this.state?.decodedtoken?.appversion)
+      )
+      let targeturl = cfg.getURL('web', this.state?.decodedtoken?.appversion)
       if (targeturl[0] === '/')
         targeturl =
           window.location.protocol +
@@ -617,8 +629,11 @@ class App extends Component {
     console.log('open notebook')
 
     try {
-      console.log('debug target url config', cfg.getURL('web'))
-      let targeturl = cfg.getURL('web')
+      console.log(
+        'debug target url config',
+        cfg.getURL('web', this.state?.decodedtoken?.appversion)
+      )
+      let targeturl = cfg.getURL('web', this.state?.decodedtoken?.appversion)
       if (targeturl[0] === '/')
         targeturl =
           window.location.protocol +
@@ -912,6 +927,47 @@ class App extends Component {
     }
   }
 
+  setToggleRequestAppversion() {
+    let newversion
+    if (this.state.requestappversion === 'stable') newversion = 'experimental'
+    else newversion = 'stable'
+    this.patchCourseDetails({ appversion: newversion })
+      .then(() => {
+        this.setState({ requestappversion: newversion })
+      })
+      .catch((error) => {
+        console.log('Problem patch appversion course:', error)
+      })
+  }
+
+  async patchCourseDetails(patch) {
+    // console.log("patch",patch);
+    try {
+      const response = await axios.patch(
+        '/lecture/course',
+        patch,
+        this.axiosConfig()
+      )
+      // console.log("patch response", response);
+      if (response) {
+        if (response.data.error) {
+          if (this.messages)
+            this.messages.show({
+              severity: 'error',
+              summary: 'patch /app/lecture/course failed',
+              detail: response.data.error
+            })
+        } else {
+          this.getLectureDetails().catch((error) =>
+            console.log('Problem patch course details:', error)
+          )
+        }
+      }
+    } catch (error) {
+      this.errorMessage(error)
+    }
+  }
+
   async patchLectureDetails(patch) {
     // console.log("patch",patch);
     try {
@@ -927,7 +983,7 @@ class App extends Component {
             })
         } else {
           this.getLectureDetails().catch((error) =>
-            console.log('Problem get Lectdetails:', error)
+            console.log('Problem patch Lectdetails:', error)
           )
         }
       }
@@ -1382,7 +1438,7 @@ class App extends Component {
     }
     const uaparser = new UAParser()
     const inIframe = window.location !== window.parent.location
-
+    const experimental = this.state.decodedtoken.appversion !== 'stable'
     return (
       <React.Fragment>
         <Toast ref={(el) => (this.messages = el)} position='topleft'>
@@ -1405,7 +1461,7 @@ class App extends Component {
           <div className='p-grid p-align-center'>
             <div className='p-col-3'>
               <img
-                src={failsLogo}
+                src={experimental ? failsLogoExp : failsLogo}
                 style={{ width: '120px' }}
                 alt='FAILS logo'
               />
@@ -1447,7 +1503,7 @@ class App extends Component {
             <div className='p-grid p-align-center'>
               <div className='p-col-3'>
                 <img
-                  src={failsLogo}
+                  src={experimental ? failsLogoExp : failsLogo}
                   style={{ width: '80px' }}
                   alt='FAILS logo'
                 />
@@ -1469,7 +1525,10 @@ class App extends Component {
           <div>
             <div className='p-grid p-align-center'>
               <div className='p-col-fixed' style={{ width: '150px' }}>
-                <img src={failsLogo} alt='FAILS logo' />
+                <img
+                  src={experimental ? failsLogoExp : failsLogo}
+                  alt='FAILS logo'
+                />
               </div>
               <div className='p-col'>
                 <h2>Course: {coursename}</h2>
@@ -1699,6 +1758,24 @@ class App extends Component {
                                   onClick={() => this.downloadRawData({})}
                                 ></Button>
                               </div>
+                              <div>
+                                <ToggleButton
+                                  onLabel='Experimental app'
+                                  offLabel='Stable app'
+                                  checked={
+                                    this.state.requestappversion ===
+                                    'experimental'
+                                  }
+                                  onChange={(e) =>
+                                    this.setToggleRequestAppversion()
+                                  }
+                                />{' '}
+                                <br />
+                                {this.state.requestappversion !==
+                                this.state.decodedtoken.appversion
+                                  ? 'Reload required for changes to take effect'
+                                  : ''}
+                              </div>
                             </Fragment>
                           )}
                         </Card>
@@ -1811,7 +1888,7 @@ class App extends Component {
               <div className='p-grid p-align-center'>
                 <div className='p-col-fixed' style={{ width: '300px' }}>
                   <img
-                    src={failsLogoLong}
+                    src={experimental ? failsLogoLongExp : failsLogoLong}
                     alt='About FAILS'
                     style={{ cursor: 'pointer' }}
                     onClick={(e) => this.copyingop.toggle(e)}
@@ -1821,7 +1898,10 @@ class App extends Component {
               <OverlayPanel ref={(el) => (this.copyingop = el)}>
                 <div className='p-grid'>
                   <div className='p-col-3'>
-                    <img src={failsLogo} alt='FAILS logo' />
+                    <img
+                      src={experimental ? failsLogoExp : failsLogo}
+                      alt='FAILS logo'
+                    />
                   </div>
                   <div className='p-col-9'>
                     <h4>
@@ -1844,7 +1924,8 @@ class App extends Component {
                 Build upon the shoulders of giants, see{' '}
                 <a href='/static/oss'> OSS attribution and licensing.</a>
                 <br /> <br />
-                App version {process.env.REACT_APP_VERSION} <br /> Browser:{' '}
+                App version {process.env.REACT_APP_VERSION}{' '}
+                {experimental && <b>(Experimental version)</b>} <br /> Browser:{' '}
                 {uaparser.getBrowser().name} (Version:{' '}
                 {uaparser.getBrowser().version}) with Engine:{' '}
                 {uaparser.getEngine().name} (Version:{' '}
