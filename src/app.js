@@ -407,9 +407,12 @@ class App extends Component {
               zip.file('assets/' + el.sha, data.arrayBuffer())
             })
           )
-          if (data.backgroundpdf && !data.backgroundpdf.none) {
-            const content = await fetch(data.backgroundpdf.url)
-            zip.file('assets/' + data.backgroundpdf.sha, content.arrayBuffer())
+          if (data.info?.backgroundpdf && !data.info.backgroundpdf.none) {
+            const content = await fetch(data.info.backgroundpdf.url)
+            zip.file(
+              'assets/' + data.info.backgroundpdf.sha,
+              content.arrayBuffer()
+            )
           }
           this.setState({
             pdfgenerate: {
