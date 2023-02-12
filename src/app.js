@@ -1655,7 +1655,7 @@ class App extends Component {
                         &nbsp;
                         <Button
                           icon='pi pi-file'
-                          label='PDF sw'
+                          label='PDF bw'
                           className='p-m-2'
                           onClick={() => this.pdfGenerate({ color: false })}
                         ></Button>
