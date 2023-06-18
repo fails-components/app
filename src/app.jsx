@@ -50,9 +50,11 @@ import failsLogoLongExp from './logo/logo1exp.svg'
 import Dexie from 'dexie'
 import JSZip from 'jszip'
 import QrScanner from 'qr-scanner'
-// eslint-disable-next-line import/no-webpack-loader-syntax
-import QrScannerWorkerPath from '!!file-loader!../node_modules/qr-scanner/qr-scanner-worker.min.js'
-QrScanner.WORKER_PATH = QrScannerWorkerPath
+
+QrScanner.WORKER_PATH = new URL(
+  '../node_modules/qr-scanner/qr-scanner-worker.min.js',
+  import.meta.url
+)
 
 window.parent.postMessage(
   JSON.stringify({ subject: 'lti.frameResize', height: '90vh' }),
@@ -65,8 +67,6 @@ const reduce = new ImageBlobReduce({ pica })
 const cfg = new FailsConfig({ react: true })
 
 axios.defaults.baseURL = cfg.getURL('app')
-
-console.log('process env', process.env)
 
 console.log('axios base', axios.defaults.baseURL, cfg.getURL('app'))
 
@@ -1925,7 +1925,7 @@ class App extends Component {
                 Build upon the shoulders of giants, see{' '}
                 <a href='/static/oss'> OSS attribution and licensing.</a>
                 <br /> <br />
-                App version {process.env.REACT_APP_VERSION}{' '}
+                App version {import.meta.env.REACT_APP_VERSION}{' '}
                 {experimental && <b>(Experimental version)</b>} <br /> Browser:{' '}
                 {uaparser.getBrowser().name} (Version:{' '}
                 {uaparser.getBrowser().version}) with Engine:{' '}

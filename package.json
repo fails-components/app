@@ -10,8 +10,8 @@
   },
   "homepage": "/static/app/",
   "dependencies": {
-    "@fails-components/config": "^1.3.0",
-    "@fails-components/data": "^1.1.1",
+    "@fails-components/config": "^1.5.4",
+    "@fails-components/data": "^1.1.3",
     "axios": "^0.21.4",
     "dexie": "^3.2.2",
     "image-blob-reduce": "^3.0.1",
@@ -27,25 +27,30 @@
     "qr-scanner": "^1.3.0",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-scripts": "^5.0.0",
     "react-transition-group": "^4.4.1",
     "sass": "^1.47.0",
     "tinycolor2": "^1.4.2",
     "ua-parser-js": "^1.0.33"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.0.0",
+    "eslint": "^8.43.0",
     "eslint-config-prettier": "^8.3.0",
-    "eslint-config-react-app": "^7.0.0",
+    "eslint-config-react-app": "^7.0.1",
     "eslint-config-standard": "^17.0.0-0",
     "eslint-plugin-prettier": "^4.0.0",
     "file-loader": "^6.2.0",
-    "prettier": "^2.5.1"
+    "prettier": "^2.5.1",
+    "vite": "^4.3.9",
+    "vite-plugin-eslint": "^1.8.1",
+    "vite-plugin-top-level-await": "^1.3.1"
   },
   "scripts": {
-    "start": "set PORT=1001 && react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "vite --host --port 1001",
+    "dev": "vite --host --port 1001",
+    "dev:clean": "npm run dev -- --force",
+    "build": "vite build",
+    "serve": "vite preview --port 1001 --host"
   },
   "eslintConfig": {
     "extends": [
