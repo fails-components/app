@@ -588,9 +588,6 @@ class App extends Component {
             summary: 'Open student notes..',
             detail: 'in new tab!'
           })
-          /* console.log("Notes data", response.data);
-          console.log("processenv", process.env);
-          console.log("URL", process.env.REACT_APP_NOTEPAD_BASE_URL); */
 
           if (!newwindow) {
             this.messages.show({
@@ -1916,7 +1913,8 @@ class App extends Component {
                   </div>
                 </div>
                 FAILS logo by chadkills <br />
-                Custom icons by icon_xpert786 <br /> <br />
+                Custom icons by icon_xpert786 and petedesignworks
+                <br /> <br />
                 Released under GNU Affero General Public License Version 3.{' '}
                 <br /> <br />
                 Download the source code from{' '}
