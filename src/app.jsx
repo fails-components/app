@@ -1255,11 +1255,24 @@ class App extends Component {
 
   itemGalleriaTemplate(item) {
     return (
-      <img
-        src={item.itemImageSrc}
-        alt={item.alt}
-        style={{ width: '100%', display: 'block' }}
-      />
+      <div>
+        <img
+          src={item.itemImageSrc}
+          alt={item.title}
+          style={{ width: '100%', display: 'block' }}
+        />
+        <span
+          style={{
+            right: 0,
+            bottom: 0,
+            position: 'absolute',
+            color: '#2196F3'
+          }}
+        >
+          {' '}
+          {item.title}
+        </span>
+      </div>
     )
   }
 
