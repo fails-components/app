@@ -325,6 +325,114 @@ export class PDFGenerator extends DrawObjectContainer {
           })
           console.log('Fail to download image', error)
         }
+      } else if (obj.type === 'form') {
+        let bAlpha = ((obj.bColor & 0xff000000) >>> 24) / 255
+        const fAlpha = ((obj.fColor & 0xff000000) >>> 24) / 255
+        let lw = obj.lw
+        // eslint-disable-next-line new-cap
+        let bMycolor = new tinycolor({
+          r: (obj.bColor & 0xff0000) >>> 16,
+          g: (obj.bColor & 0xff00) >>> 8,
+          b: (obj.bColor & 0xff) >>> 0
+        })
+        // eslint-disable-next-line new-cap
+        let fMycolor = new tinycolor({
+          r: (obj.fColor & 0xff0000) >>> 16,
+          g: (obj.fColor & 0xff00) >>> 8,
+          b: (obj.fColor & 0xff) >>> 0
+        })
+        // border threat like a normal line
+        if (bMycolor.toHexString() === '#ffffff')
+          // eslint-disable-next-line new-cap
+          bMycolor = new tinycolor('black')
+        if (bMycolor.isLight()) bMycolor.darken(20)
+        if (bAlpha === 0 && fMycolor.toHexString() === '#ffffff') {
+          bAlpha = 1.0
+          lw = 0.25
+          // eslint-disable-next-line new-cap
+          const workcolor = new tinycolor(fMycolor.toString())
+          bMycolor = workcolor.darken(20).toHexString()
+          bAlpha = fAlpha
+        }
+        if (this.bw) {
+          if (bAlpha > 0) bMycolor = tinycolor('black')
+          fMycolor = fMycolor.greyscale()
+        }
+        const bMc = bMycolor.toRgb()
+        const fMc = fMycolor.toRgb()
+
+        switch (obj.formtype) {
+          case 1: // line
+            // eslint-disable-next-line no-unreachable
+            page.drawLine({
+              start: {
+                x: this.margins + obj.posx * geoscale,
+                y: this.margins + this.upageheight + -obj.posy * geoscale
+              },
+              end: {
+                x: this.margins + (obj.posx + obj.width) * geoscale,
+                y:
+                  this.margins +
+                  this.upageheight -
+                  (obj.posy + obj.height) * geoscale
+              },
+              thickness: lw * geoscale,
+              color: rgb(bMc.r / 255, bMc.g / 255, bMc.b / 255),
+              opacity: bAlpha
+            })
+            break
+          case 2: // rectangle
+            page.drawRectangle({
+              x: this.margins + obj.posx * geoscale,
+              y:
+                this.margins +
+                this.upageheight +
+                -obj.posy * geoscale -
+                obj.height * geoscale,
+              width: obj.width * geoscale,
+              height: obj.height * geoscale,
+              borderWidth: lw * geoscale,
+              borderOpacity: bAlpha,
+              borderColor: rgb(bMc.r / 255, bMc.g / 255, bMc.b / 255),
+              color: rgb(fMc.r / 255, fMc.g / 255, fMc.b / 255),
+              opacity: fAlpha
+            })
+            break
+          case 3: // circle
+            page.drawCircle({
+              x: this.margins + (obj.posx + obj.width * 0.5) * geoscale,
+              y:
+                this.margins +
+                this.upageheight +
+                -(obj.posy + obj.height * 0.5) * geoscale,
+              size: Math.abs(0.5 * obj.width * geoscale),
+              borderWidth: lw * geoscale,
+              borderOpacity: bAlpha,
+              borderColor: rgb(bMc.r / 255, bMc.g / 255, bMc.b / 255),
+              color: rgb(fMc.r / 255, fMc.g / 255, fMc.b / 255),
+              opacity: fAlpha
+            })
+            break
+          case 4: // ellipse
+            page.drawEllipse({
+              x: this.margins + (obj.posx + obj.width * 0.5) * geoscale,
+              y:
+                this.margins +
+                this.upageheight +
+                -(obj.posy + obj.height * 0.5) * geoscale,
+              xScale: Math.abs(0.5 * obj.width * geoscale),
+              yScale: Math.abs(0.5 * obj.height * geoscale),
+              borderWidth: lw * geoscale,
+              borderOpacity: bAlpha,
+              borderColor: rgb(bMc.r / 255, bMc.g / 255, bMc.b / 255),
+              color: rgb(fMc.r / 255, fMc.g / 255, fMc.b / 255),
+              opacity: fAlpha
+            })
+            break
+
+          default:
+            console.log('unknown form type', obj.formtype)
+        }
       } else {
         console.log('unknown type', obj.type)
       }

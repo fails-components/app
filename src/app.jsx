@@ -1255,11 +1255,24 @@ class App extends Component {
 
   itemGalleriaTemplate(item) {
     return (
-      <img
-        src={item.itemImageSrc}
-        alt={item.alt}
-        style={{ width: '100%', display: 'block' }}
-      />
+      <div>
+        <img
+          src={item.itemImageSrc}
+          alt={item.title}
+          style={{ width: '100%', display: 'block' }}
+        />
+        <span
+          style={{
+            right: 0,
+            bottom: 0,
+            position: 'absolute',
+            color: '#2196F3'
+          }}
+        >
+          {' '}
+          {item.title}
+        </span>
+      </div>
     )
   }
 
@@ -1544,24 +1557,6 @@ class App extends Component {
               <div className='p-grid'>
                 <div className='p-col-12 p-md-6'>
                   <div className='p-grid'>
-                    {joinlecture && running && (
-                      <div className='p-col-12 p-md-6'>
-                        <Card title='Lecture is running!'>
-                          <ProgressSpinner
-                            style={{ width: '30px', height: '30px' }}
-                            strokeWidth='4'
-                            fill='#EEEEEE'
-                            animationDuration='2s'
-                          />
-                          <Button
-                            icon='pi pi-users'
-                            label='Join lecture'
-                            className='p-m-2'
-                            onClick={this.openStudentNotes}
-                          ></Button>
-                        </Card>
-                      </div>
-                    )}
                     {startlecture && (
                       <div className='p-col-12 p-md-6'>
                         <Card title='Start/Join lecture'>
@@ -1683,6 +1678,35 @@ class App extends Component {
                           )}
                       </Card>
                     </div>
+                    {joinlecture && running && (
+                      <div className='p-col-12 p-md-6'>
+                        <Card title='Lecture broadcast'>
+                          <ProgressSpinner
+                            style={{ width: '30px', height: '30px' }}
+                            strokeWidth='4'
+                            fill='#EEEEEE'
+                            animationDuration='2s'
+                          />
+                          <Button
+                            icon='pi pi-users'
+                            label='Join lecture'
+                            className='p-m-2'
+                            onClick={this.openStudentNotes}
+                          ></Button>
+                        </Card>
+                      </div>
+                    )}
+                    {joinlecture && !running && (
+                      <div className='p-col-12 p-md-6'>
+                        <Card title='Lecture broadcast'>
+                          During the lecture, you can enter here to watch the
+                          live broadcast of the blackboard (including audio and
+                          video in the beta test group). You can also add
+                          annotations with a pen that can be included in the
+                          generated pdfs.
+                        </Card>
+                      </div>
+                    )}
                     {pictures && (
                       <div className='p-col-12 p-md-6'>
                         <Card title='Pictures'>
