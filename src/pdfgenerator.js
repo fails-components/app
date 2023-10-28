@@ -437,39 +437,44 @@ export class PDFGenerator extends DrawObjectContainer {
         console.log('unknown type', obj.type)
       }
     }
-    // now add fake clipping
-    page.drawRectangle({
-      x: 0,
-      y: 0,
-      width: this.pagewidth,
-      height:
-        this.margins +
-        this.textHeight +
-        Math.max(0, geoscale * (-this.yend + this.yoffset + this.scrollheight)), // white out the line break!
-      color: rgb(1, 1, 1)
-    })
-    page.drawRectangle({
-      x: 0,
-      y: this.pageheight - this.margins,
-      width: this.pagewidth,
-      height: this.margins,
-      color: rgb(1, 1, 1)
-    })
+    if (!this.backgroundpdf) {
+      // now add fake clipping, if it is not a background pdf
+      page.drawRectangle({
+        x: 0,
+        y: 0,
+        width: this.pagewidth,
+        height:
+          this.margins +
+          this.textHeight +
+          Math.max(
+            0,
+            geoscale * (-this.yend + this.yoffset + this.scrollheight)
+          ), // white out the line break!
+        color: rgb(1, 1, 1)
+      })
+      page.drawRectangle({
+        x: 0,
+        y: this.pageheight - this.margins,
+        width: this.pagewidth,
+        height: this.margins,
+        color: rgb(1, 1, 1)
+      })
 
-    page.drawRectangle({
-      x: 0,
-      y: 0,
-      width: this.margins,
-      height: this.pageheight,
-      color: rgb(1, 1, 1)
-    })
-    page.drawRectangle({
-      x: this.pagewidth - this.margins,
-      y: 0,
-      width: this.margins,
-      height: this.pageheight,
-      color: rgb(1, 1, 1)
-    })
+      page.drawRectangle({
+        x: 0,
+        y: 0,
+        width: this.margins,
+        height: this.pageheight,
+        color: rgb(1, 1, 1)
+      })
+      page.drawRectangle({
+        x: this.pagewidth - this.margins,
+        y: 0,
+        width: this.margins,
+        height: this.pageheight,
+        color: rgb(1, 1, 1)
+      })
+    }
   }
 
   async createPDF() {
