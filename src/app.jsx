@@ -1255,11 +1255,21 @@ class App extends Component {
 
   itemGalleriaTemplate(item) {
     return (
-      <div>
+      <div key={item.itemImageSrc + 'IMG'} style={{ height: '25vh' }}>
         <img
           src={item.itemImageSrc}
+          key={item.itemImageSrc + 'IMGBody'}
           alt={item.title}
-          style={{ width: '100%', display: 'block' }}
+          style={{
+            width: '100%',
+            maxHeight: '100%',
+            maxWidth: '100%',
+            marginLeft: 'auto',
+            marginRight: 'auto',
+            display: 'block',
+            backgroundImage: 'url(' + item.thumbnailImageSrc + ')',
+            backgroundSize: 'contain'
+          }}
         />
         <span
           style={{
@@ -1279,9 +1289,16 @@ class App extends Component {
   thumbnailGalleriaTemplate(item) {
     return (
       <img
-        src={item.thumbnailImageSrc}
-        alt={item.alt}
-        style={{ height: '40px', display: 'block' }}
+        src={item?.thumbnailImageSrc}
+        alt={item?.alt}
+        style={{
+          maxHeight: '90%',
+          minHeight: '10px',
+          maxWidth: '90%',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          display: 'block'
+        }}
       />
     )
   }
@@ -1719,9 +1736,11 @@ class App extends Component {
                                   thumbnail={this.thumbnailGalleriaTemplate}
                                   activeIndex={this.state.pictIndex}
                                   changeItemOnIndicatorHover={true}
-                                  onItemChange={(e) =>
+                                  onItemChange={(e) => {
+                                    if (!picts || e.index >= picts.length)
+                                      return
                                     this.setState({ pictIndex: e.index })
-                                  }
+                                  }}
                                 ></Galleria>
                               </div>
                             )}
