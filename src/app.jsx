@@ -23,7 +23,7 @@ import { ProgressSpinner } from 'primereact/progressspinner'
 import { Card } from 'primereact/card'
 import { Tree } from 'primereact/tree'
 import { InputText } from 'primereact/inputtext'
-import { Galleria } from 'primereact/galleria'
+import { PictureSelect } from './pictureselect.jsx'
 import { ScrollPanel } from 'primereact/scrollpanel'
 import { Calendar } from 'primereact/calendar'
 import { Dialog } from 'primereact/dialog'
@@ -250,8 +250,6 @@ class App extends Component {
     this.pollTemplate = this.pollTemplate.bind(this)
     this.lectureTemplate = this.lectureTemplate.bind(this)
 
-    this.itemGalleriaTemplate = this.itemGalleriaTemplate.bind(this)
-    this.thumbnailGalleriaTemplate = this.thumbnailGalleriaTemplate.bind(this)
     this.renewToken = this.renewToken.bind(this)
     this.openNotebook = this.openNotebook.bind(this)
     this.openNotebookWarn = this.openNotebookWarn.bind(this)
@@ -828,8 +826,12 @@ class App extends Component {
   checkTokenRenew() {
     if (!this.tokentimeout) return
     const delay = this.tokentimeout.diff(moment()).valueOf()
-
-    this.setState({ showrenew: delay })
+    if (
+      delay < 61 * 1000 ||
+      Math.abs(delay - this.state.showrenew) > 60 * 1000
+    ) {
+      this.setState({ showrenew: delay })
+    }
   }
 
   async renewToken() {
@@ -1251,56 +1253,6 @@ class App extends Component {
         return <b>{node.label}</b>
       }
     }
-  }
-
-  itemGalleriaTemplate(item) {
-    return (
-      <div key={item.itemImageSrc + 'IMG'} style={{ height: '25vh' }}>
-        <img
-          src={item.itemImageSrc}
-          key={item.itemImageSrc + 'IMGBody'}
-          alt={item.title}
-          style={{
-            width: '100%',
-            maxHeight: '100%',
-            maxWidth: '100%',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-            display: 'block',
-            backgroundImage: 'url(' + item.thumbnailImageSrc + ')',
-            backgroundSize: 'contain'
-          }}
-        />
-        <span
-          style={{
-            right: 0,
-            bottom: 0,
-            position: 'absolute',
-            color: '#2196F3'
-          }}
-        >
-          {' '}
-          {item.title}
-        </span>
-      </div>
-    )
-  }
-
-  thumbnailGalleriaTemplate(item) {
-    return (
-      <img
-        src={item?.thumbnailImageSrc}
-        alt={item?.alt}
-        style={{
-          maxHeight: '90%',
-          minHeight: '10px',
-          maxWidth: '90%',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          display: 'block'
-        }}
-      />
-    )
   }
 
   render() {
@@ -1730,18 +1682,17 @@ class App extends Component {
                           <div className='p-grid'>
                             {picts.length > 0 && (
                               <div className='p-col-12'>
-                                <Galleria
+                                <PictureSelect
                                   value={picts}
                                   item={this.itemGalleriaTemplate}
                                   thumbnail={this.thumbnailGalleriaTemplate}
                                   activeIndex={this.state.pictIndex}
-                                  changeItemOnIndicatorHover={true}
                                   onItemChange={(e) => {
                                     if (!picts || e.index >= picts.length)
                                       return
                                     this.setState({ pictIndex: e.index })
                                   }}
-                                ></Galleria>
+                                />
                               </div>
                             )}
 
