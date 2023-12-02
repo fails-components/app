@@ -12,7 +12,7 @@
   "dependencies": {
     "@fails-components/config": "^1.5.4",
     "@fails-components/data": "^1.2.0",
-    "axios": "^0.21.4",
+    "axios": "^1.6.2",
     "dexie": "^3.2.2",
     "image-blob-reduce": "^3.0.1",
     "js-file-download": "^0.4.12",
