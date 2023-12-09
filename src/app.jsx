@@ -1633,18 +1633,16 @@ class App extends Component {
                             }
                           />
                         )}
-                        {!this.state.haslectnotes &&
-                          uaparser.getEngine().name === 'WebKit' &&
-                          inIframe && (
-                            <Button
-                              href={this.getAppURL()}
-                              className='p-button-text p-button-sm p-button-outlined'
-                              label='For your notes on Safari/WebKit press this link for fullpage.'
-                              onClick={() =>
-                                window.open(this.getAppURL(), '_blank')
-                              }
-                            />
-                          )}
+                        {!this.state.haslectnotes && inIframe && (
+                          <Button
+                            href={this.getAppURL()}
+                            className='p-button-text p-button-sm p-button-outlined'
+                            label='For your notes press here for fullpage FAILS window.'
+                            onClick={() =>
+                              window.open(this.getAppURL(), '_blank')
+                            }
+                          />
+                        )}
                       </Card>
                     </div>
                     {joinlecture && running && (
