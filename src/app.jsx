@@ -33,6 +33,7 @@ import { locale, addLocale } from 'primereact/api'
 import { ToggleButton } from 'primereact/togglebutton'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { OverlayPanel } from 'primereact/overlaypanel'
+import { MultiSelect } from 'primereact/multiselect'
 // eslint-disable-next-line camelcase
 import jwt_decode from 'jwt-decode'
 import axios from 'axios'
@@ -242,6 +243,7 @@ class App extends Component {
           this.state.decodedtoken.appversion
         )
         this.state.requestappversion = this.state.decodedtoken.appversion
+        this.state.requestfeatures = this.state.decodedtoken.features
       }
       console.log('this.state.decoded', this.state.decodedtoken)
       console.log('pathname', window.location.pathname)
@@ -942,6 +944,17 @@ class App extends Component {
       })
   }
 
+  changeFeatures(value) {
+    const newfeatures = value
+    this.patchCourseDetails({ features: newfeatures })
+      .then(() => {
+        this.setState({ requestfeatures: newfeatures })
+      })
+      .catch((error) => {
+        console.log('Problem patch features course:', error)
+      })
+  }
+
   async patchCourseDetails(patch) {
     // console.log("patch",patch);
     try {
@@ -1321,6 +1334,13 @@ class App extends Component {
     let bgpdfname = 'loading...'
 
     let date = new Date()
+
+    const availFeatures = [
+      {
+        name: 'Audio and Video',
+        id: 'avbroadcast'
+      }
+    ]
 
     const lectdetail = this.state.lectdetail
     let running = false
@@ -1763,8 +1783,31 @@ class App extends Component {
                                   }
                                 />{' '}
                                 <br />
+                                Features:
+                                <br />
+                                <MultiSelect
+                                  value={this.state.requestfeatures}
+                                  onChange={(e) => this.changeFeatures(e.value)}
+                                  options={availFeatures}
+                                  optionLabel='name'
+                                  optionValue='id'
+                                  display='chip'
+                                  placeholder='Select Features'
+                                  className='w-full md:w-20rem'
+                                />
+                                <br />
                                 {this.state.requestappversion !==
-                                this.state.decodedtoken.appversion
+                                  this.state.decodedtoken.appversion ||
+                                this.state.requestfeatures.some(
+                                  (el) =>
+                                    !this.state.decodedtoken.features.includes(
+                                      el
+                                    )
+                                ) ||
+                                this.state.decodedtoken.features.some(
+                                  (el) =>
+                                    !this.state.requestfeatures.includes(el)
+                                )
                                   ? 'Reload required for changes to take effect'
                                   : ''}
                               </div>
