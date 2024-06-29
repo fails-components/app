@@ -1440,7 +1440,7 @@ class App extends Component {
     }
     const uaparser = new UAParser()
     const inIframe = window.location !== window.parent.location
-    const experimental = this.state.decodedtoken.appversion !== 'stable'
+    const experimental = this.state.decodedtoken?.appversion !== 'stable'
     return (
       <React.Fragment>
         <Toast ref={(el) => (this.messages = el)} position='topleft'>
