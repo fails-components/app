@@ -1744,7 +1744,7 @@ class App extends Component {
                                 label='Support page'
                                 className='p-m-2'
                                 onClick={(event) => {
-                                  if (event.ctrlKey) {
+                                  if (event.ctrlKey || event.metaKey) {
                                     this.setState({ hiddensupport: true })
                                   } else {
                                     window.open(
