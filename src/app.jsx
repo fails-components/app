@@ -25,6 +25,7 @@ import { Tree } from 'primereact/tree'
 import { InputText } from 'primereact/inputtext'
 import { PictureSelect } from './pictureselect.jsx'
 import { ScrollPanel } from 'primereact/scrollpanel'
+import { Dropdown } from 'primereact/dropdown'
 import { Calendar } from 'primereact/calendar'
 import { Dialog } from 'primereact/dialog'
 import { Toast } from 'primereact/toast'
@@ -51,6 +52,7 @@ import failsLogoLongExp from './logo/logo1exp.svg'
 import Dexie from 'dexie'
 import JSZip from 'jszip'
 import QrScanner from 'qr-scanner'
+import { JupyterEdit } from './jupyteredit.jsx'
 
 QrScanner.WORKER_PATH = new URL(
   '../node_modules/qr-scanner/qr-scanner-worker.min.js',
@@ -224,12 +226,18 @@ class App extends Component {
     this.state.logincode = ''
     this.state.incllectnotes = true
     this.state.hiddensupport = false
+    this.state.jupyteredit = false
+    this.state.selectedJupyterApp = {
+      appname: 'Edit notebook',
+      appid: undefined
+    }
     // next line is for lazy developers
     // this.state.hiddensupport = true
     this.supportactivate = ''
 
     this.pictureupload = React.createRef()
     this.bgpdfupload = React.createRef()
+    this.jupyteredit = React.createRef()
 
     // get query string
     {
@@ -251,6 +259,7 @@ class App extends Component {
 
     this.pollTemplate = this.pollTemplate.bind(this)
     this.lectureTemplate = this.lectureTemplate.bind(this)
+    this.jupyterTemplate = this.jupyterTemplate.bind(this)
 
     this.renewToken = this.renewToken.bind(this)
     this.openNotebook = this.openNotebook.bind(this)
@@ -830,50 +839,66 @@ class App extends Component {
     const delay = this.tokentimeout.diff(moment()).valueOf()
     if (
       delay < 61 * 1000 ||
-      Math.abs(delay - this.state.showrenew) > 60 * 1000
+      (this.state.showrenew !== false &&
+        Math.abs(delay - this.state.showrenew) > 60 * 1000)
     ) {
-      this.setState({ showrenew: delay })
+      if (this.decodedtoken && this.decodedtoken.maxrenew < 1) {
+        this.tokentimeout = moment() // we can not renew so time out!
+        this.setState({ showrenew: -1 })
+      }
+      if (this.state.jupyteredit && delay > 0 && !this.tokenrenewing) {
+        // auto renew while in jupyter edit mode
+        console.log('Auto renew token (jupyter active) with delay', delay)
+        this.renewToken()
+      } else {
+        this.setState({ showrenew: delay })
+      }
     }
   }
 
   async renewToken() {
+    if (this.tokenrenewing) return
+    this.tokenrenewing = true
     axios
       .get('/token', this.axiosConfig())
-      .catch(
-        function (error) {
-          console.log('Error', error.toJSON())
-          if (this.messages)
-            this.messages.show({
-              severity: 'error',
-              summary: error.name,
-              detail: error.message
-            })
-        }.bind(this)
-      )
-      .then(
-        function (response) {
-          if (response) {
-            if (response.data.error) {
-              if (this.messages)
-                this.messages.show({
-                  severity: 'error',
-                  summary: 'get /app/token failed',
-                  detail: response.data.error
-                })
-            } else {
-              const decodedtoken = jwt_decode(response.data.token)
-              console.log('token details', response.data.token)
-              // console.log(moment.unix(jwt_decode(response.data.token).exp,"x").format() );
-              this.tokentimeout = moment.unix(decodedtoken.exp, 'x')
-              this.setState({
-                token: response.data.token,
-                decodedtoken,
-                showrenew: false
+      .catch((error) => {
+        console.log('Error', error.toJSON())
+        if (this.messages)
+          this.messages.show({
+            severity: 'error',
+            summary: error.name,
+            detail: error.message
+          })
+        this.tokenrenewing = false
+      })
+      .then((response) => {
+        if (response) {
+          if (response.data.error) {
+            if (this.messages)
+              this.messages.show({
+                severity: 'error',
+                summary: 'get /app/token failed',
+                detail: response.data.error
               })
-            }
+            console.log(
+              'Server error token renewal',
+              response.data.error,
+              response
+            )
+          } else {
+            const decodedtoken = jwt_decode(response.data.token)
+            console.log('token details', decodedtoken)
+            // console.log(moment.unix(jwt_decode(response.data.token).exp,"x").format() );
+            this.tokentimeout = moment.unix(decodedtoken.exp, 'x')
+            this.setState({
+              token: response.data.token,
+              decodedtoken,
+              showrenew: false
+            })
           }
-        }.bind(this)
-      )
+        }
+        this.tokenrenewing = false
+      })
   }
 
   async doCopy(para) {
@@ -1060,6 +1085,39 @@ class App extends Component {
     }
   }
 
+  async jupyterLicense() {
+    const { licenses } = await this.jupyteredit.current.getLicenses()
+    const lines = []
+    for (const [key, value] of Object.entries(licenses.bundles)) {
+      lines.push(
+        key + '\n' + '#'.repeat(key.length) + '\n\n',
+        'Dependencies:\n'
+      )
+      const text = value?.packages
+        ?.map?.(
+          ({ name, versionInfo = '', licenseId = '', extractedText = '' }) => {
+            const heading = name + '(' + versionInfo + ', ' + licenseId + ')'
+            return (
+              heading +
+              ':\n' +
+              '-'.repeat(heading.length) +
+              '\n' +
+              extractedText
+            )
+          }
+        )
+        ?.join('\n')
+      if (text) lines.push(text)
+    }
+    // now generate a blob and download
+    const blob = new Blob([lines.join('')], {
+      type: 'text/plain'
+    })
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank')
+    URL.revokeObjectURL(url)
+  }
+
   changePoll(changes) {
     if (!changes.id) return
     const tochange = { id: changes.id }
@@ -1131,7 +1189,7 @@ class App extends Component {
             {!this.state.ispolledit[node.id] ? (
               <Button
                 label={node.name}
-                className='p-button-text p-button-secondary'
+                className='p-button-text p-button-secondary fails-tree'
               ></Button>
             ) : (
               <React.Fragment>
@@ -1157,7 +1215,7 @@ class App extends Component {
             )}
             <ToggleButton
               checked={!!node.multi}
-              className='p-button-text p-button-sm p-button-outlined'
+              className='p-button-text p-button-sm p-button-outlined fails-tree'
               onLabel='multiple'
               offLabel='single'
               onChange={(e) =>
@@ -1187,7 +1245,7 @@ class App extends Component {
             {!this.state.ispolledit[node.id] ? (
               <Button
                 label={node.name}
-                className='p-button-text p-button-secondary'
+                className='p-button-text p-button-secondary fails-tree'
               ></Button>
             ) : (
               <React.Fragment>
@@ -1260,6 +1318,124 @@ class App extends Component {
     }
   }
 
+  jupyterTemplate(node) {
+    switch (node.type) {
+      case 'notebook': {
+        return (
+          <span className='p-buttonset'>
+            {
+              <Button
+                label={node.name + ' (' + node.date.format('D.M.YYYY') + ')'}
+                className='p-button-text p-button-secondary fails-tree'
+              ></Button>
+            }
+            {
+              <Button
+                icon='pi pi-pencil'
+                className='p-button-text p-button-sm'
+                iconPos='right'
+                tooltip='Edit notebook name'
+              />
+            }
+            <ToggleButton
+              checked={node.presentDownload !== 'No'}
+              className='p-button-text p-button-sm p-button-outlined fails-tree'
+              onLabel={
+                node.presentDownload === 'downloadAndEdit'
+                  ? 'Download and Edit'
+                  : 'Download'
+              }
+              tooltip='Select download and edit options for students.'
+              offLabel='No download'
+            />
+            {
+              <Button
+                label={node.note}
+                className='p-button-text p-button-secondary fails-tree'
+                tooltip='Internal note'
+              ></Button>
+            }
+            {
+              /*! this.state.ispolledit[node.id] && */ <Button
+                icon='pi pi-pencil'
+                className='p-button-text p-button-sm'
+                iconPos='right'
+                tooltip='Edit interal note'
+              />
+            }
+            <Button
+              icon='pi pi-folder-open'
+              className='p-button-text p-button-sm p-button-danger'
+              iconPos='right'
+            />
+            <Button
+              icon='pi pi-trash'
+              className='p-button-text p-button-sm p-button-danger'
+              iconPos='right'
+            />
+          </span>
+        )
+      }
+      case 'app': {
+        return (
+          <span className='p-buttonset'>
+            {
+              <Button
+                label={node.name}
+                className='p-button-text p-button-secondary'
+              ></Button>
+            }
+            <ToggleButton
+              checked={!!node.presentToStudents}
+              className='p-button-text p-button-sm p-button-outlined fails-tree'
+              onLabel='Show'
+              offLabel='Hide'
+              tooltip='Show or hide app for students outside of the lecture'
+            />
+          </span>
+        )
+      }
+      case 'upload': {
+        return (
+          <div>
+            <InputText
+              value={this.state.polledittext[node.id]}
+              /* onChange={(e) =>
+                this.setState((state) => {
+                  const toret = { polledittext: state.polledittext }
+                  toret.polledittext[node.id] = e.target.value
+                  return toret
+                })
+              } */
+              placeholder='Enter name for new or upload notebook ...'
+              tooltip='Name for new jupyter notebook'
+              className='p-inputtext-sm'
+              size='35'
+            ></InputText>
+            {
+              /* this.state.polledittext[node.id] &&
+               this.state.polledittext[node.id].toString().length > 0 && */ <Button
+                icon='pi pi-file'
+                className='p-button-rounded p-button-text'
+                tooltip='Create new jupyter notebook'
+              />
+            }
+            {
+              /* this.state.polledittext[node.id] &&
+              this.state.polledittext[node.id].toString().length > 0 && */ <Button
+                icon='pi pi-upload'
+                className='p-button-rounded p-button-text'
+                tooltip='Upload jupyter notebook'
+              />
+            }
+          </div>
+        )
+      }
+
+      default:
+    }
+  }
+
   lectureTemplate(node) {
     switch (node.type) {
       default: {
@@ -1270,6 +1446,32 @@ class App extends Component {
 
   render() {
     let polldata = []
+    const jupyterdata = [
+      {
+        id: 'jupyterid1',
+        key: 'jupyterkey1',
+        presentDownload: 'onlyDownload', // 'No', 'onlyDownload', 'downloadAndEdit'
+        name: 'Pendel und andere langweilige Dinge',
+        filename: 'pendelzeug.ipynb',
+        type: 'notebook',
+        date: moment(),
+        children: [
+          {
+            id: 'appid1',
+            key: 'appkey1',
+            type: 'app',
+            name: 'App 1',
+            presentToStudents: true
+          }
+        ],
+        note: 'Chapter 2.1'
+      },
+      {
+        id: 'uploadid',
+        key: 'uploadkey',
+        type: 'upload'
+      }
+    ]
     const lecturedata = []
     if (this.state.lectures) {
       const lecturebuckets = {}
@@ -1328,6 +1530,7 @@ class App extends Component {
     let pictures = false
     let pastlectures = false
     let polls = false
+    let jupyter = false
 
     let bgpdfrem = false
     let bgpdfup = true
@@ -1339,10 +1542,15 @@ class App extends Component {
       {
         name: 'Audio and Video',
         id: 'avbroadcast'
+      },
+      {
+        name: 'Jupytersupport (Development only)',
+        id: 'jupyter'
       }
     ]
 
     const lectdetail = this.state.lectdetail
+    const experimental = this.state.decodedtoken?.appversion !== 'stable'
     let running = false
     let bgpdfixed = false
     if (lectdetail) {
@@ -1423,6 +1631,20 @@ class App extends Component {
       polldata.push({ id: 'ADD', type: 'add', key: 'add' })
     }
 
+    const jupyterAppletOptions = () => {
+      const options = this.state.jupyterState.failsApp.applets.map(
+        (el, index) => ({
+          appname: el.appname || 'Applet ' + (index + 1),
+          ...el
+        })
+      )
+      options.unshift({
+        appname: 'Edit notebook mode',
+        appid: undefined
+      })
+      return options
+    }
+
     if (this.state.token && this.state.decodedtoken) {
       displayname = this.state.decodedtoken.user.displayname
       // coursename=this.state.decodedtoken.course.coursetitle; // may be move to lecture details
@@ -1433,6 +1655,9 @@ class App extends Component {
           pastlectures = true
         polls = true
         pictures = true
+        if (experimental && this.state.requestfeatures.includes('jupyter')) {
+          jupyter = true
+        }
       }
       if (this.state.decodedtoken.role.includes('audience')) {
         joinlecture = true
@@ -1440,7 +1665,6 @@ class App extends Component {
     }
     const uaparser = new UAParser()
     const inIframe = window.location !== window.parent.location
-    const experimental = this.state.decodedtoken?.appversion !== 'stable'
     return (
       <React.Fragment>
         <Toast ref={(el) => (this.messages = el)} position='topleft'>
@@ -1533,12 +1757,13 @@ class App extends Component {
                 />
               </div>
               <div className='p-col'>
-                <h2>Course: {coursename}</h2>
-                <h3>Lecture: {lecturename}</h3>
-                <h4>{displaynames}</h4>
+                <h2 style={{ margin: '4px 0' }}>Course: {coursename}</h2>
+                <h3 style={{ margin: '2px 0' }}>Lecture: {lecturename}</h3>
+                <h4 style={{ margin: '2px 0' }}>{displaynames}</h4>
+                <br></br>
+                <h4 style={{ margin: '2px 0' }}>Hello {displayname}!</h4>
               </div>
             </div>
-            <h5>Hello {displayname}!</h5>
             <ScrollPanel
               style={{ width: '100%', height: '75vh' }}
               className='appscroll'
@@ -1917,6 +2142,23 @@ class App extends Component {
                         </Card>
                       </div>
                     )}
+                    {jupyter && (
+                      <div className='p-col-12'>
+                        <Card title='Jupyter notebooks and apps'>
+                          <Tree
+                            value={jupyterdata}
+                            nodeTemplate={this.jupyterTemplate}
+                          ></Tree>
+                          Activate Jupyter Edit:
+                          <Button
+                            icon='pi pi-cloud-download'
+                            label='Open edit'
+                            className='p-m-2'
+                            onClick={() => this.setState({ jupyteredit: true })}
+                          ></Button>
+                        </Card>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1967,6 +2209,131 @@ class App extends Component {
                 {uaparser.getEngine().name} (Version:{' '}
                 {uaparser.getEngine().version})
               </OverlayPanel>
+              {jupyter && (
+                <Dialog
+                  visible={this.state.jupyteredit}
+                  modal={true}
+                  closable={false}
+                  position='top'
+                  className='jupyterDialog'
+                  header={
+                    <Fragment>
+                      <Button
+                        label={'Edit Jupyter xyz.ipynb'}
+                        style={{ fontWeight: 'bold' }}
+                        className='p-button-text p-button-secondary'
+                      ></Button>
+                      {this.state.jupyterState?.dirty && (
+                        <Button
+                          icon='pi pi-save'
+                          className='p-button-text p-button-sm'
+                          iconPos='right'
+                          tooltip='Save jupyter notebook'
+                          onClick={async () => {
+                            if (this.jupyteredit.current) {
+                              const toSave =
+                                await this.jupyteredit.current.saveJupyter()
+                              console.log('Attempt to save', toSave)
+                            }
+                          }}
+                        />
+                      )}
+                      <Button
+                        icon='pi pi-play'
+                        className='p-button-text p-button-sm'
+                        iconPos='right'
+                        tooltip='Test restart kernel and reruns cell, this is done automatically during the lecture at startup!'
+                        onClick={async () => {
+                          if (this.jupyteredit.current) {
+                            const toRerun =
+                              await this.jupyteredit.current.restartKernelAndRunCells()
+                            console.log('Attempt to rerun', toRerun)
+                          }
+                        }}
+                      />
+                      <Button
+                        icon='pi pi-times'
+                        className='p-button-text p-button-sm'
+                        iconPos='right'
+                        onClick={() => {
+                          if (this.state.jupyterState?.dirty) {
+                            confirmDialog({
+                              message:
+                                'You have unchanged changed. Do you really want to exit?',
+                              header: 'Unsaved changes',
+                              icon: 'pi pi-exclamation-triangle',
+                              accept: () => {
+                                this.setState({ jupyteredit: false })
+                              },
+                              reject: () => {} // do nothing
+                            })
+                          } else {
+                            this.setState({ jupyteredit: false })
+                          }
+                        }}
+                      />
+                      {this.state.jupyterState?.failsApp?.applets?.length >
+                        0 && (
+                        <Fragment>
+                          <Dropdown
+                            value={this.state.selectedJupyterApp}
+                            onChange={(e) => {
+                              if (this.jupyteredit.current) {
+                                this.jupyteredit.current.activateApp(
+                                  e.value.appid
+                                )
+                              }
+                              this.setState({ selectedJupyterApp: e.value })
+                            }}
+                            placeholder='Select an applet to test...'
+                            options={jupyterAppletOptions()}
+                            optionLabel='appname'
+                          />
+                        </Fragment>
+                      )}
+                    </Fragment>
+                  }
+                  footer={
+                    <Fragment>
+                      Build upon the shoulders of giants, see{' '}
+                      <button
+                        onClick={() => {
+                          if (this.jupyteredit.current) {
+                            this.jupyterLicense()
+                          }
+                        }}
+                        className='link-button'
+                      >
+                        {' '}
+                        OSS attribution and licensing
+                      </button>
+                      of Jupyter Lite related code.
+                    </Fragment>
+                  }
+                  style={
+                    this.state?.selectedJupyterApp?.appid
+                      ? { width: 'fit-content', height: 'fit-content' }
+                      : { width: '90%', height: '90%' }
+                  }
+                  contentStyle={{
+                    overflowY: 'visible',
+                    paddingBottom: '0rem'
+                  }}
+                >
+                  <JupyterEdit
+                    editActivated={this.state.jupyteredit}
+                    ref={this.jupyteredit}
+                    stateCallback={(stateChange) => {
+                      this.setState((state) => ({
+                        jupyterState: {
+                          ...(state.jupyterState || {}),
+                          ...stateChange
+                        }
+                      }))
+                    }}
+                  />
+                </Dialog>
+              )}
               <Dialog
                 visible={this.state.logindia}
                 onHide={() => this.setState({ logindia: false })}
