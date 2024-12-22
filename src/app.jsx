@@ -727,9 +727,11 @@ class App extends Component {
         const thumbnail = await reduce.toBlob(picture, { max: 100 })
 
         const data = new FormData()
+        data.append('filename', picture.name)
+        data.append('SIZE_file', blob.size)
         data.append('file', blob)
+        data.append('SIZE_filethumbnail', thumbnail.size)
         data.append('filethumbnail', thumbnail)
-        data.append('data', JSON.stringify({ filename: picture.name }))
 
         const response = await axios.post(
           '/lecture/picture',
@@ -782,15 +784,13 @@ class App extends Component {
             detail: 'We started a PDF upload!'
           })
         const pdf = input.files[0]
-        console.log('pdf upload info', pdf)
-
         const blob = new Blob([pdf], { type: 'application/pdf' }) // await fetch(pdf.objectURL).then(r => r.blob());
-        console.log('pdf upload blob', blob)
+        data.append('filename', pdf.name)
+        data.append('SIZE_file', blob.size)
         data.append('file', blob)
-        data.append('data', JSON.stringify({ filename: pdf.name }))
         none = false
       } else {
-        data.append('data', JSON.stringify({ none: true }))
+        data.append('none', true)
       }
 
       const response = await axios.post(
