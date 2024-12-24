@@ -54,7 +54,6 @@ export class PictureSelect extends Component {
       imgstyles.pointerEvents = 'none'
       imgstyles.opacity = 0
     }
-    console.log('pcit debug', pict)
     return (
       <div
         key={index + pict.itemImageSrc + 'IMGBody'}
