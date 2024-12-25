@@ -46,3 +46,9 @@ code {
   padding-bottom: 0.3rem;
 }
 
+.p-button.p-button-danger.p-button-text:hover {
+  background: rgba(182, 63, 0, 0.04);
+  border-color: transparent;
+  color: #B63F00;
+}
+

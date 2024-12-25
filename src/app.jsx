@@ -223,6 +223,12 @@ class App extends Component {
     this.state.selLecture = null
     this.state.polledittext = {}
     this.state.ispolledit = {}
+    this.state.polledittextnote = {}
+    this.state.ispolledittextnote = {}
+    this.state.jupytereditname = {}
+    this.state.isjupytereditname = {}
+    this.state.jupytereditnote = {}
+    this.state.isjupytereditnote = {}
     this.state.logincode = ''
     this.state.incllectnotes = true
     this.state.hiddensupport = false
@@ -714,7 +720,6 @@ class App extends Component {
   }
 
   async uploadPicture(input) {
-    console.log('uploadpicture', input)
     if (input.files && input.files.length > 0) {
       if (this.messages)
         this.messages.show({
@@ -758,7 +763,7 @@ class App extends Component {
             this.messages.show({
               severity: 'info',
               summary: 'File upload completed',
-              detail: 'Picture and thumbnail uploaded successfully completed!'
+              detail: 'Picture and thumbnail upload successfully completed!'
             })
           }
         }
@@ -779,8 +784,6 @@ class App extends Component {
   }
 
   async uploadBgpdf(input) {
-    console.log('uploadbgpdf', input)
-
     // ok fine we have now to generate a thumbnail
     try {
       let none = true
@@ -820,7 +823,7 @@ class App extends Component {
             this.messages.show({
               severity: 'info',
               summary: 'File upload completed',
-              detail: 'PDF uploaded successfully completed!'
+              detail: 'PDF upload successfully completed!'
             })
         }
       }
@@ -831,6 +834,60 @@ class App extends Component {
       )
     } catch (error) {
       this.errorMessage(error)
+    }
+  }
+
+  async uploadJupyter(file) {
+    if (file) {
+      if (this.messages)
+        this.messages.show({
+          severity: 'info',
+          summary: 'File upload started',
+          detail: 'We started a upload for your Jupyter notebook!'
+        })
+      // ok fine we have now to generate a thumbnail
+      try {
+        const fileData = JSON.stringify(file)
+        const blob = new Blob([fileData], { type: 'application/x-ipynb+json' })
+
+        const data = new FormData()
+        data.append('filename', this.state.jupyterFilename)
+        data.append('id', this.state.jupyterId)
+        data.append(
+          'applets',
+          JSON.stringify(file.metadata?.failsApp?.applets || {})
+        )
+        data.append('name', this.state.ipynbuploadname)
+        data.append('SIZE_file', blob.size)
+        data.append('file', blob)
+
+        const response = await axios.post(
+          '/lecture/ipynb',
+          data,
+          this.axiosConfig()
+        )
+        if (response) {
+          if (response.data.error) {
+            this.messages.show({
+              severity: 'error',
+              summary: 'get /app/lecture/ipynb failed',
+              detail: response.data.error
+            })
+          } else {
+            this.messages.show({
+              severity: 'info',
+              summary: 'File upload completed',
+              detail: 'Jupyter notebook upload completed!'
+            })
+          }
+        }
+
+        this.getLectureDetails().catch((error) =>
+          console.log('Problem get Lectdetails:', error)
+        )
+      } catch (error) {
+        this.errorMessage(error)
+      }
     }
   }
 
@@ -1122,6 +1179,7 @@ class App extends Component {
     if (!changes.id) return
     const tochange = { id: changes.id }
     if (changes.name) tochange.name = changes.name
+    if ('note' in changes) tochange.note = changes.note
     if (changes.parentid) tochange.parentid = changes.parentid
     if ('multi' in changes) tochange.multi = changes.multi
 
@@ -1157,6 +1215,23 @@ class App extends Component {
       })
     }
 
+    const changepollnote = () => {
+      this.changePoll({
+        id: changepollid,
+        parentid: node.parentid,
+        note: this.state.polledittextnote[node.id]
+      })
+      this.setState((state) => {
+        const toret = {
+          polledittextnote: state.polledittextnote,
+          ispolledittextnote: state.ispolledittextnote
+        }
+        toret.polledittextnote[node.id] = ''
+        toret.ispolledittextnote[node.id] = false
+        return toret
+      })
+    }
+
     const deletepoll = () => {
       this.deletePoll({ id: changepollid, parentid: node.parentid })
       this.setState((state) => {
@@ -1182,6 +1257,18 @@ class App extends Component {
       })
     }
 
+    const starteditpollnote = () => {
+      this.setState((state) => {
+        const toret = {
+          polledittextnote: state.polledittextnote,
+          ispolledittextnote: state.ispolledittextnote
+        }
+        toret.polledittextnote[node.id] = node.note ? node.note : ''
+        toret.ispolledittextnote[node.id] = true
+        return toret
+      })
+    }
+
     switch (node.type) {
       case 'question': {
         return (
@@ -1190,6 +1277,7 @@ class App extends Component {
               <Button
                 label={node.name}
                 className='p-button-text p-button-secondary fails-tree'
+                tooltip={'Question text'}
               ></Button>
             ) : (
               <React.Fragment>
@@ -1203,11 +1291,13 @@ class App extends Component {
                     })
                   }
                   placeholder='Edit...'
+                  tooltip={'Edit question'}
                   className='p-inputtext-sm'
                 ></InputText>
                 <Button
                   icon='pi pi-save'
                   className='p-button-text p-button-sm'
+                  tooltip={'Save edited question'}
                   iconPos='right'
                   onClick={changepolltext}
                 />
@@ -1218,6 +1308,7 @@ class App extends Component {
               className='p-button-text p-button-sm p-button-outlined fails-tree'
               onLabel='multiple'
               offLabel='single'
+              tooltip={'Switch between single and multiple answers'}
               onChange={(e) =>
                 this.changePoll({ id: changepollid, multi: e.value })
               }
@@ -1227,12 +1318,55 @@ class App extends Component {
                 icon='pi pi-pencil'
                 className='p-button-text p-button-sm'
                 iconPos='right'
+                tooltip={'Edit question text'}
                 onClick={starteditpoll}
+              />
+            )}
+            {!this.state.ispolledittextnote[node.id] ? (
+              node.note && (
+                <Button
+                  label={node.note}
+                  className='p-button-text p-button-secondary fails-tree'
+                  tooltip={'Internal note'}
+                ></Button>
+              )
+            ) : (
+              <React.Fragment>
+                <InputText
+                  value={this.state.polledittextnote[node.id]}
+                  onChange={(e) =>
+                    this.setState((state) => {
+                      const toret = { polledittextnote: state.polledittextnote }
+                      toret.polledittextnote[node.id] = e.target.value
+                      return toret
+                    })
+                  }
+                  placeholder='Internal note...'
+                  tooltip={'Edit internal note'}
+                  className='p-inputtext-sm'
+                ></InputText>
+                <Button
+                  icon='pi pi-save'
+                  className='p-button-text p-button-sm'
+                  tooltip={'Save edited internalnote'}
+                  iconPos='right'
+                  onClick={changepollnote}
+                />
+              </React.Fragment>
+            )}
+            {!this.state.ispolledittextnote[node.id] && (
+              <Button
+                icon={node.note ? 'pi pi-pencil' : 'pi pi-plus'}
+                className='p-button-text p-button-sm'
+                iconPos='right'
+                tooltip={'Add/Edit internal note'}
+                onClick={starteditpollnote}
               />
             )}
             <Button
               icon='pi pi-trash'
               className='p-button-text p-button-sm p-button-danger'
+              tooltip={'Delete question'}
               iconPos='right'
               onClick={deletepoll}
             />
@@ -1246,6 +1380,7 @@ class App extends Component {
               <Button
                 label={node.name}
                 className='p-button-text p-button-secondary fails-tree'
+                tooltip={'Answer text'}
               ></Button>
             ) : (
               <React.Fragment>
@@ -1259,12 +1394,14 @@ class App extends Component {
                     })
                   }
                   placeholder='Edit...'
+                  tooltip={'Edit answer text'}
                   className='p-inputtext-sm'
                 ></InputText>
                 <Button
                   icon='pi pi-save'
                   className='p-button-text p-button-sm'
                   iconPos='right'
+                  tooltip={'Save answer text'}
                   onClick={changepolltext}
                 />
               </React.Fragment>
@@ -1274,6 +1411,7 @@ class App extends Component {
                 icon='pi pi-pencil'
                 className='p-button-text p-button-sm'
                 iconPos='right'
+                tooltip={'Edit answer text'}
                 onClick={starteditpoll}
               />
             )}
@@ -1281,6 +1419,7 @@ class App extends Component {
               icon='pi pi-trash'
               className='p-button-text p-button-sm p-button-danger'
               iconPos='right'
+              tooltip={'Delete question'}
               onClick={deletepoll}
             />
           </span>
@@ -1299,6 +1438,7 @@ class App extends Component {
                 })
               }
               placeholder='Add...'
+              tooltip={'Edit new text'}
               className='p-inputtext-sm'
             ></InputText>
             {this.state.polledittext[node.id] &&
@@ -1306,6 +1446,7 @@ class App extends Component {
                 <Button
                   icon='pi pi-plus'
                   className='p-button-rounded p-button-text'
+                  tooltip={'Add element'}
                   onClick={changepolltext}
                 />
               )}
@@ -1318,61 +1459,275 @@ class App extends Component {
     }
   }
 
+  changeApplet(changes) {
+    if (!changes.id) return
+    const tochange = { id: changes.id }
+    if (changes.name) tochange.name = changes.name
+    if ('note' in changes) tochange.note = changes.note
+    if ('presentDownload' in changes)
+      tochange.presentDownload = changes.presentDownload
+    if ('applets' in changes) {
+      const appsch = changes.applets
+        .map((el) => ({
+          presentToStudents: el.presentToStudents,
+          id: el.id
+        }))
+        .filter((el) => typeof el.presentToStudents !== 'undefined')
+      if (appsch.length) tochange.applets = appsch
+    }
+
+    this.patchLectureDetails({ ipynbs: tochange })
+  }
+
   jupyterTemplate(node) {
+    let isStudent = false
+    let canEdit = false
+    if (this.state.token && this.state.decodedtoken) {
+      if (this.state.decodedtoken.role.includes('instructor')) {
+        canEdit = true
+      }
+      if (this.state.decodedtoken.role.includes('audience')) {
+        isStudent = true
+      }
+    }
     switch (node.type) {
       case 'notebook': {
+        const starteditname = () => {
+          this.setState((state) => {
+            const toret = {
+              jupytereditname: state.jupytereditname,
+              isjupytereditname: state.isjupytereditname
+            }
+            toret.jupytereditname[node.id] = node.name ? node.name : ''
+            toret.isjupytereditname[node.id] = true
+            return toret
+          })
+        }
+        const changeeditname = () => {
+          this.changeApplet({
+            id: node.id,
+            name: this.state.jupytereditname[node.id]
+          })
+          this.setState((state) => {
+            const toret = {
+              jupytereditname: state.jupytereditname,
+              isjupytereditname: state.isjupytereditname
+            }
+            toret.jupytereditname[node.id] = ''
+            toret.isjupytereditname[node.id] = false
+            return toret
+          })
+        }
+        const starteditnote = () => {
+          this.setState((state) => {
+            const toret = {
+              jupytereditnote: state.jupytereditnote,
+              isjupytereditnote: state.isjupytereditnote
+            }
+            toret.jupytereditnote[node.id] = node.note ? node.note : ''
+            toret.isjupytereditnote[node.id] = true
+            return toret
+          })
+        }
+        const changeeditnote = () => {
+          this.changeApplet({
+            id: node.id,
+            note: this.state.jupytereditnote[node.id]
+          })
+          this.setState((state) => {
+            const toret = {
+              jupytereditnote: state.jupytereditnote,
+              isjupytereditnote: state.isjupytereditnote
+            }
+            toret.jupytereditnote[node.id] = ''
+            toret.isjupytereditnote[node.id] = false
+            return toret
+          })
+        }
         return (
           <span className='p-buttonset'>
-            {
+            {!this.state.isjupytereditname[node.id] ? (
               <Button
-                label={node.name + ' (' + node.date.format('D.M.YYYY') + ')'}
+                label={
+                  node.name +
+                  (canEdit ? ' (' + node.date.format('D.M.YYYY') + ')' : '')
+                }
                 className='p-button-text p-button-secondary fails-tree'
+                tooltip={node.filename}
               ></Button>
-            }
-            {
+            ) : (
+              <React.Fragment>
+                <InputText
+                  value={this.state.jupytereditname[node.id]}
+                  onChange={(e) =>
+                    this.setState((state) => {
+                      const toret = { jupytereditname: state.jupytereditname }
+                      toret.jupytereditname[node.id] = e.target.value
+                      return toret
+                    })
+                  }
+                  placeholder='Edit...'
+                  tooltip={'Edit poll name'}
+                  className='p-inputtext-sm'
+                ></InputText>
+                <Button
+                  icon='pi pi-save'
+                  className='p-button-text p-button-sm'
+                  iconPos='right'
+                  tooltip={'Save poll name'}
+                  onClick={changeeditname}
+                />
+              </React.Fragment>
+            )}
+            {canEdit && (
+              <Fragment>
+                {!this.state.isjupytereditname[node.id] && (
+                  <Button
+                    icon='pi pi-pencil'
+                    className='p-button-text p-button-sm'
+                    iconPos='right'
+                    onClick={starteditname}
+                    tooltip='Edit notebook name'
+                  />
+                )}
+                <ToggleButton
+                  checked={node.presentDownload !== 'no'}
+                  className='p-button-text p-button-sm p-button-outlined fails-tree'
+                  onLabel={
+                    node.presentDownload === 'downloadAndEdit'
+                      ? 'Download and Edit'
+                      : 'Download'
+                  }
+                  onChange={() => {
+                    let presentDownload = 'no'
+                    console.log('presentDownload', node.presentDownload)
+                    switch (node.presentDownload) {
+                      case 'no':
+                        presentDownload = 'download'
+                        break
+                      case 'download':
+                        presentDownload = 'downloadAndEdit'
+                        break
+                      default:
+                        presentDownload = 'no'
+                    }
+                    console.log('presentDownload after', node.presentDownload)
+                    this.changeApplet({ id: node.id, presentDownload })
+                  }}
+                  tooltip='Select download and edit options for students.'
+                  offLabel='No download'
+                />
+                {!this.state.isjupytereditnote[node.id] ? (
+                  node.note &&
+                  node.note.length > 0 && (
+                    <Button
+                      label={node.note}
+                      className='p-button-text p-button-secondary fails-tree'
+                      tooltip='Internal note'
+                    ></Button>
+                  )
+                ) : (
+                  <React.Fragment>
+                    <InputText
+                      value={this.state.jupytereditnote[node.id]}
+                      onChange={(e) =>
+                        this.setState((state) => {
+                          const toret = {
+                            jupytereditnote: state.jupytereditnote
+                          }
+                          toret.jupytereditnote[node.id] = e.target.value
+                          return toret
+                        })
+                      }
+                      placeholder='Edit...'
+                      className='p-inputtext-sm'
+                    ></InputText>
+                    <Button
+                      icon='pi pi-save'
+                      className='p-button-text p-button-sm'
+                      iconPos='right'
+                      onClick={changeeditnote}
+                    />
+                  </React.Fragment>
+                )}
+                {!this.state.isjupytereditnote[node.id] && (
+                  <Button
+                    icon={
+                      node.note && node.note.length > 0
+                        ? 'pi pi-pencil'
+                        : 'pi pi-plus'
+                    }
+                    className='p-button-text p-button-sm'
+                    iconPos='right'
+                    onClick={starteditnote}
+                    tooltip='Add/Edit interal note'
+                  />
+                )}
+              </Fragment>
+            )}
+            {((node.presentDownload === 'downloadAndEdit' && isStudent) ||
+              canEdit) && (
               <Button
-                icon='pi pi-pencil'
-                className='p-button-text p-button-sm'
+                icon='pi pi-folder-open'
+                className='p-button-text p-button-sm p-button-danger'
                 iconPos='right'
-                tooltip='Edit notebook name'
+                tooltip='Edit notebook'
+                onClick={() => {
+                  fetch(node.url)
+                    .then(async (response) => {
+                      if (!response.ok)
+                        throw new Error(
+                          'Fetch failed with code: ' +
+                            response.status +
+                            ' ' +
+                            response.statusText
+                        )
+                      this.setState({
+                        jupyterDocument: await response.json(),
+                        jupyterFilename: node.filename,
+                        ipynbuploadname: node.name || 'Dummy title',
+                        jupyterId: node.id,
+                        jupyteredit: true,
+                        selectedJupyterApp: undefined
+                      })
+                    })
+                    .catch((error) => {
+                      this.messages.show({
+                        severity: 'error',
+                        summary: 'Download notebook failed',
+                        detail: error.toString()
+                      })
+                    })
+                }}
               />
-            }
-            <ToggleButton
-              checked={node.presentDownload !== 'No'}
-              className='p-button-text p-button-sm p-button-outlined fails-tree'
-              onLabel={
-                node.presentDownload === 'downloadAndEdit'
-                  ? 'Download and Edit'
-                  : 'Download'
-              }
-              tooltip='Select download and edit options for students.'
-              offLabel='No download'
-            />
-            {
+            )}
+            {canEdit && (
               <Button
-                label={node.note}
-                className='p-button-text p-button-secondary fails-tree'
-                tooltip='Internal note'
-              ></Button>
-            }
-            {
-              /*! this.state.ispolledit[node.id] && */ <Button
-                icon='pi pi-pencil'
-                className='p-button-text p-button-sm'
+                icon='pi pi-trash'
+                className='p-button-text p-button-sm p-button-danger'
                 iconPos='right'
-                tooltip='Edit interal note'
+                tooltip='Delete notebook'
+                onClick={() => {
+                  this.patchLectureDetails({
+                    removeipynb: {
+                      id: node.id
+                    }
+                  })
+                }}
               />
-            }
-            <Button
-              icon='pi pi-folder-open'
-              className='p-button-text p-button-sm p-button-danger'
-              iconPos='right'
-            />
-            <Button
-              icon='pi pi-trash'
-              className='p-button-text p-button-sm p-button-danger'
-              iconPos='right'
-            />
+            )}
+            {['download', 'downloadAndEdit'].includes(node.presentDownload) &&
+              isStudent && (
+                <a
+                  href={node.url}
+                  download
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='p-button p-component p-button-text p-button-sm p-button-danger p-button-icon-only'
+                >
+                  <span className='p-button-icon p-c pi pi-download'></span>
+                </a>
+              )}
           </span>
         )
       }
@@ -1385,49 +1740,145 @@ class App extends Component {
                 className='p-button-text p-button-secondary'
               ></Button>
             }
-            <ToggleButton
-              checked={!!node.presentToStudents}
-              className='p-button-text p-button-sm p-button-outlined fails-tree'
-              onLabel='Show'
-              offLabel='Hide'
-              tooltip='Show or hide app for students outside of the lecture'
-            />
+            {canEdit && (
+              <ToggleButton
+                checked={!!node.presentToStudents}
+                className='p-button-text p-button-sm p-button-outlined fails-tree'
+                onLabel='Show'
+                offLabel='Hide'
+                onChange={(e) => {
+                  this.changeApplet({
+                    id: node.ipynbid,
+                    applets: [{ id: node.id, presentToStudents: e.value }]
+                  })
+                }}
+                tooltip='Show or hide app for students outside of the lecture'
+              />
+            )}
+            {node.presentToStudents && isStudent && (
+              <Fragment>
+                <Button
+                  icon='pi pi-play'
+                  className='p-button-text p-button-sm p-button-danger'
+                  iconPos='right'
+                  onClick={() => {
+                    fetch(node.url)
+                      .then(async (response) => {
+                        if (!response.ok)
+                          throw new Error(
+                            'Fetch failed with code: ' +
+                              response.status +
+                              ' ' +
+                              response.statusText
+                          )
+                        this.setState({
+                          jupyterDocument: await response.json(),
+                          jupyterFilename: node.filename,
+                          ipynbuploadname: node.name || 'Dummy title',
+                          jupyterId: node.ipynbid,
+                          jupyteredit: true,
+                          selectedJupyterApp: {
+                            appid: node.id,
+                            appname: node.name
+                          }
+                        })
+                      })
+                      .catch((error) => {
+                        this.messages.show({
+                          severity: 'error',
+                          summary: 'Download notebook failed',
+                          detail: error.toString()
+                        })
+                      })
+                  }}
+                />
+              </Fragment>
+            )}
           </span>
         )
       }
       case 'upload': {
+        const newId = Math.random().toString(36).slice(2, 11)
+        const fileInputRef = React.createRef()
         return (
           <div>
             <InputText
-              value={this.state.polledittext[node.id]}
-              /* onChange={(e) =>
+              value={this.state.ipynbuploadname || ''}
+              onChange={(e) =>
                 this.setState((state) => {
-                  const toret = { polledittext: state.polledittext }
-                  toret.polledittext[node.id] = e.target.value
+                  const toret = { ipynbuploadname: state.ipynbuploadname }
+                  toret.ipynbuploadname = e.target.value
                   return toret
                 })
-              } */
+              }
               placeholder='Enter name for new or upload notebook ...'
               tooltip='Name for new jupyter notebook'
               className='p-inputtext-sm'
               size='35'
             ></InputText>
-            {
-              /* this.state.polledittext[node.id] &&
-               this.state.polledittext[node.id].toString().length > 0 && */ <Button
-                icon='pi pi-file'
-                className='p-button-rounded p-button-text'
-                tooltip='Create new jupyter notebook'
-              />
-            }
-            {
-              /* this.state.polledittext[node.id] &&
-              this.state.polledittext[node.id].toString().length > 0 && */ <Button
+            {this.state.ipynbuploadname &&
+              this.state.ipynbuploadname.toString().length > 0 && (
+                <Button
+                  icon='pi pi-file'
+                  className='p-button-rounded p-button-text'
+                  tooltip='Create new jupyter notebook'
+                  onClick={() => {
+                    this.setState({
+                      jupyterDocument: {
+                        metadata: {
+                          orig_nbformat: 4
+                        },
+                        nbformat_minor: 4,
+                        nbformat: 4,
+                        cells: []
+                      },
+                      jupyterFilename:
+                        this.state.ipynbuploadname
+                          .replace(/[^a-zA-Z0-9]/g, '_')
+                          .toLowerCase() + '.ipynb',
+                      jupyterId: newId,
+                      jupyteredit: true,
+                      selectedJupyterApp: undefined
+                    })
+                  }}
+                />
+              )}
+            {this.state.ipynbuploadname && this.state.ipynbuploadname && (
+              <Button
                 icon='pi pi-upload'
                 className='p-button-rounded p-button-text'
                 tooltip='Upload jupyter notebook'
-              />
-            }
+                onClick={() => {
+                  fileInputRef?.current?.click()
+                }}
+              >
+                <input
+                  ref={fileInputRef}
+                  type='file'
+                  onChange={async (e) => {
+                    const files = e.dataTransfer?.files || e.target.files
+                    if (files.length > 0) {
+                      const file = files[0]
+                      console.log('File peek', file)
+                      try {
+                        this.setState({
+                          jupyterDocument: JSON.parse(await file.text()),
+                          jupyterFilename: file.name,
+                          jupyterId: newId,
+                          jupyteredit: true,
+                          selectedJupyterApp: undefined
+                        })
+                      } catch (error) {
+                        this.errorMessage(error)
+                        console.log('Error parsing file:', error)
+                      }
+                    }
+                  }}
+                  hidden
+                  accept='application/x-ipynb+json,.ipynb'
+                />
+              </Button>
+            )}
           </div>
         )
       }
@@ -1446,8 +1897,8 @@ class App extends Component {
 
   render() {
     let polldata = []
-    const jupyterdata = [
-      {
+    let jupyterdata = [
+      /* {
         id: 'jupyterid1',
         key: 'jupyterkey1',
         presentDownload: 'onlyDownload', // 'No', 'onlyDownload', 'downloadAndEdit'
@@ -1465,12 +1916,7 @@ class App extends Component {
           }
         ],
         note: 'Chapter 2.1'
-      },
-      {
-        id: 'uploadid',
-        key: 'uploadkey',
-        type: 'upload'
-      }
+      } */
     ]
     const lecturedata = []
     if (this.state.lectures) {
@@ -1531,6 +1977,8 @@ class App extends Component {
     let pastlectures = false
     let polls = false
     let jupyter = false
+    let showemptyjupyter = false
+    let jupytersave = false
 
     let bgpdfrem = false
     let bgpdfup = true
@@ -1608,6 +2056,7 @@ class App extends Component {
             key: el.id,
             type: 'question',
             name: el.name,
+            note: el.note,
             children: [],
             multi: !!el.multi
           }
@@ -1649,19 +2098,57 @@ class App extends Component {
       displayname = this.state.decodedtoken.user.displayname
       // coursename=this.state.decodedtoken.course.coursetitle; // may be move to lecture details
       // lecturename=this.state.decodedtoken.course.title; // may be move to lecture details
+      if (experimental && this.state.requestfeatures.includes('jupyter')) {
+        jupyter = true
+      }
       if (this.state.decodedtoken.role.includes('instructor')) {
         startlecture = true
         if (this.state.lectures && this.state.lectures.length > 1)
           pastlectures = true
         polls = true
         pictures = true
-        if (experimental && this.state.requestfeatures.includes('jupyter')) {
-          jupyter = true
+        if (jupyter) {
+          jupyterdata.push({
+            id: 'uploadid',
+            key: 'uploadkey',
+            type: 'upload'
+          })
         }
+        showemptyjupyter = true
+        jupytersave = true
       }
       if (this.state.decodedtoken.role.includes('audience')) {
         joinlecture = true
       }
+    }
+
+    if (lectdetail?.ipynbs) {
+      const ipynbs = lectdetail.ipynbs.map((el) => ({
+        id: el.id,
+        key: el.id + 'key',
+        url: el.url,
+        presentDownload: el.presentDownload, // 'No', 'onlyDownload', 'downloadAndEdit'
+        name: el.name,
+        filename: el.filename,
+        type: 'notebook',
+        date: moment(el.date),
+        children:
+          el.applets?.map?.((applet) => ({
+            id: applet.appid,
+            ipynbid: el.id,
+            key: applet.appid + 'key',
+            url: el.url,
+            filename: el.filename,
+            type: 'app',
+            name: applet.appname,
+            presentToStudents:
+              typeof applet.presentToStudents !== 'undefined'
+                ? applet.presentToStudents
+                : false
+          })) || [],
+        note: el.note
+      }))
+      jupyterdata = [...ipynbs, ...jupyterdata]
     }
     const uaparser = new UAParser()
     const inIframe = window.location !== window.parent.location
@@ -2142,20 +2629,13 @@ class App extends Component {
                         </Card>
                       </div>
                     )}
-                    {jupyter && (
+                    {jupyter && (jupyterdata.length > 1 || showemptyjupyter) && (
                       <div className='p-col-12'>
                         <Card title='Jupyter notebooks and apps'>
                           <Tree
                             value={jupyterdata}
                             nodeTemplate={this.jupyterTemplate}
                           ></Tree>
-                          Activate Jupyter Edit:
-                          <Button
-                            icon='pi pi-cloud-download'
-                            label='Open edit'
-                            className='p-m-2'
-                            onClick={() => this.setState({ jupyteredit: true })}
-                          ></Button>
                         </Card>
                       </div>
                     )}
@@ -2219,11 +2699,15 @@ class App extends Component {
                   header={
                     <Fragment>
                       <Button
-                        label={'Edit Jupyter xyz.ipynb'}
+                        label={
+                          jupytersave
+                            ? 'Edit Jupyter ' + this.state.jupyterFilename
+                            : this.state.ipynbuploadname
+                        }
                         style={{ fontWeight: 'bold' }}
                         className='p-button-text p-button-secondary'
                       ></Button>
-                      {this.state.jupyterState?.dirty && (
+                      {this.state.jupyterState?.dirty && jupytersave && (
                         <Button
                           icon='pi pi-save'
                           className='p-button-text p-button-sm'
@@ -2233,11 +2717,37 @@ class App extends Component {
                             if (this.jupyteredit.current) {
                               const toSave =
                                 await this.jupyteredit.current.saveJupyter()
-                              console.log('Attempt to save', toSave)
+                              await this.uploadJupyter(toSave)
                             }
                           }}
                         />
                       )}
+                      {this.state.jupyterState?.dirty &&
+                        !jupytersave &&
+                        !this.state.selectedJupyterApp && (
+                          <Button
+                            icon='pi pi-download'
+                            className='p-button-text p-button-sm'
+                            iconPos='right'
+                            tooltip='Download jupyter notebook'
+                            onClick={async () => {
+                              if (this.jupyteredit.current) {
+                                const toSave =
+                                  await this.jupyteredit.current.saveJupyter()
+                                const theblob = new Blob(
+                                  [JSON.stringify(toSave)],
+                                  {
+                                    type: 'application/x-ipynb+json'
+                                  }
+                                )
+                                fileDownload(
+                                  theblob,
+                                  this.state.jupyterFilename
+                                )
+                              }
+                            }}
+                          />
+                        )}
                       <Button
                         icon='pi pi-play'
                         className='p-button-text p-button-sm'
@@ -2256,41 +2766,46 @@ class App extends Component {
                         className='p-button-text p-button-sm'
                         iconPos='right'
                         onClick={() => {
-                          if (this.state.jupyterState?.dirty) {
+                          if (this.state.jupyterState?.dirty && jupytersave) {
                             confirmDialog({
                               message:
-                                'You have unchanged changed. Do you really want to exit?',
+                                'You have unsaved changes. Do you really want to exit?',
                               header: 'Unsaved changes',
                               icon: 'pi pi-exclamation-triangle',
                               accept: () => {
-                                this.setState({ jupyteredit: false })
+                                this.setState({
+                                  jupyteredit: false,
+                                  jupyterDocument: undefined,
+                                  jupyterFilename: undefined,
+                                  jupyterId: undefined,
+                                  ipynbuploadname: undefined
+                                })
                               },
                               reject: () => {} // do nothing
                             })
                           } else {
-                            this.setState({ jupyteredit: false })
+                            this.setState({
+                              jupyteredit: false,
+                              jupyterDocument: undefined,
+                              jupyterFilename: undefined,
+                              jupyterId: undefined,
+                              ipynbuploadname: undefined
+                            })
                           }
                         }}
                       />
-                      {this.state.jupyterState?.failsApp?.applets?.length >
-                        0 && (
-                        <Fragment>
+                      {this.state.jupyterState?.failsApp?.applets?.length > 0 &&
+                        jupytersave && (
                           <Dropdown
                             value={this.state.selectedJupyterApp}
                             onChange={(e) => {
-                              if (this.jupyteredit.current) {
-                                this.jupyteredit.current.activateApp(
-                                  e.value.appid
-                                )
-                              }
                               this.setState({ selectedJupyterApp: e.value })
                             }}
                             placeholder='Select an applet to test...'
                             options={jupyterAppletOptions()}
                             optionLabel='appname'
                           />
-                        </Fragment>
-                      )}
+                        )}
                     </Fragment>
                   }
                   footer={
@@ -2323,6 +2838,9 @@ class App extends Component {
                   <JupyterEdit
                     editActivated={this.state.jupyteredit}
                     ref={this.jupyteredit}
+                    document={this.state.jupyterDocument}
+                    filename={this.state.jupyterFilename}
+                    appid={this.state.selectedJupyterApp?.appid}
                     stateCallback={(stateChange) => {
                       this.setState((state) => ({
                         jupyterState: {

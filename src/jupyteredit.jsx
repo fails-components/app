@@ -17,7 +17,6 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 import React, { Component, Fragment } from 'react'
-import testData from './example.ipynb?raw'
 import './jupyteredit.css'
 
 const jupyterurl = 'http://127.0.0.1:8000/index.html'
@@ -25,7 +24,7 @@ const jupyterurl = 'http://127.0.0.1:8000/index.html'
 export class JupyterEdit extends Component {
   constructor(props) {
     super(props)
-    this.state = { dirty: false, appLoading: true, appid: undefined }
+    this.state = { dirty: false, appLoading: true }
     this.onMessage = this.onMessage.bind(this)
     if (props.stateCallback) props.stateCallback({ dirty: false })
     this._requestId = 1 // id, if we request something
@@ -36,12 +35,18 @@ export class JupyterEdit extends Component {
     window.addEventListener('message', this.onMessage)
   }
 
+  componentDidUpdate(prevProps) {
+    if (this.props.appid !== prevProps.appid) {
+      this.activateApp()
+    }
+  }
+
   componentWillUnmount() {
     window.removeEventListener('message', this.onMessage)
   }
 
   loadJupyter() {
-    const data = JSON.parse(testData)
+    const data = this.props.document
     if (data?.metadata?.kernelspec) {
       const kernelspec = data?.metadata?.kernelspec
       if (kernelspec?.name !== 'python' && kernelspec?.name !== 'xpython') {
@@ -54,22 +59,25 @@ export class JupyterEdit extends Component {
     }
     this.sendToIFrame({
       type: 'loadJupyter',
-      inLecture: false,
-      fileName: 'example.ipynb',
+      inLecture: !!this.props.appid,
+      appid: this.props.appid,
+      fileName: this.props.filename || 'example.ipynb',
       fileData: data,
       kernelName: 'python'
     })
   }
 
   async saveJupyter() {
-    return this.sendToIFrameAndReceive({
+    const fileToSaveObj = await this.sendToIFrameAndReceive({
       type: 'saveJupyter',
-      fileName: 'example.ipynb'
+      fileName: this.props.filename || 'example.ipynb'
     })
+    if (!fileToSaveObj.fileData) throw new Error('Empty saveJupyter response')
+    return fileToSaveObj.fileData
   }
 
-  activateApp(appid) {
-    this.setState({ appid })
+  activateApp() {
+    const appid = this.props.appid
     return this.sendToIFrameAndReceive({
       type: 'activateApp',
       inLecture: !!appid,
@@ -187,9 +195,9 @@ export class JupyterEdit extends Component {
     let width = '100%'
     let height = '99%'
 
-    if (this.state.appid) {
+    if (this.props.appid) {
       const appletSize =
-        this.state.appletSizes && this.state.appletSizes[this.state.appid]
+        this.state.appletSizes && this.state.appletSizes[this.props.appid]
       if (appletSize) {
         width = Math.ceil(appletSize.width * 1.01) + 'px'
         height = Math.ceil(appletSize.height * 1.01) + 'px'
@@ -205,7 +213,9 @@ export class JupyterEdit extends Component {
           ref={(el) => {
             this.iframe = el
           }}
-          onLoad={this.onIFrameLoad}
+          onLoad={() => {
+            console.log('Jupyter iframe loaded')
+          }}
           allow=''
           credentialless='true'
           sandbox='allow-scripts allow-downloads allow-same-origin allow-popups' // we need allow-forms for a local jupyter server, remove for jupyterlite
