@@ -2113,9 +2113,9 @@ class App extends Component {
             key: 'uploadkey',
             type: 'upload'
           })
+          showemptyjupyter = true
+          jupytersave = true
         }
-        showemptyjupyter = true
-        jupytersave = true
       }
       if (this.state.decodedtoken.role.includes('audience')) {
         joinlecture = true
