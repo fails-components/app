@@ -1195,6 +1195,11 @@ class App extends Component {
   }
 
   pollTemplate(node) {
+    const ttopts = {
+      className: 'teal-tooltip',
+      position: 'top',
+      showDelay: 1000
+    }
     let changepollid = node.id
     if (node.type === 'add')
       changepollid = Math.random().toString(36).substr(2, 9)
@@ -1278,6 +1283,7 @@ class App extends Component {
                 label={node.name}
                 className='p-button-text p-button-secondary fails-tree'
                 tooltip={'Question text'}
+                tooltipOptions={ttopts}
               ></Button>
             ) : (
               <React.Fragment>
@@ -1292,12 +1298,14 @@ class App extends Component {
                   }
                   placeholder='Edit...'
                   tooltip={'Edit question'}
+                  tooltipOptions={ttopts}
                   className='p-inputtext-sm'
                 ></InputText>
                 <Button
                   icon='pi pi-save'
                   className='p-button-text p-button-sm'
                   tooltip={'Save edited question'}
+                  tooltipOptions={ttopts}
                   iconPos='right'
                   onClick={changepolltext}
                 />
@@ -1309,6 +1317,7 @@ class App extends Component {
               onLabel='multiple'
               offLabel='single'
               tooltip={'Switch between single and multiple answers'}
+              tooltipOptions={ttopts}
               onChange={(e) =>
                 this.changePoll({ id: changepollid, multi: e.value })
               }
@@ -1319,6 +1328,7 @@ class App extends Component {
                 className='p-button-text p-button-sm'
                 iconPos='right'
                 tooltip={'Edit question text'}
+                tooltipOptions={ttopts}
                 onClick={starteditpoll}
               />
             )}
@@ -1328,6 +1338,7 @@ class App extends Component {
                   label={node.note}
                   className='p-button-text p-button-secondary fails-tree'
                   tooltip={'Internal note'}
+                  tooltipOptions={ttopts}
                 ></Button>
               )
             ) : (
@@ -1343,12 +1354,14 @@ class App extends Component {
                   }
                   placeholder='Internal note...'
                   tooltip={'Edit internal note'}
+                  tooltipOptions={ttopts}
                   className='p-inputtext-sm'
                 ></InputText>
                 <Button
                   icon='pi pi-save'
                   className='p-button-text p-button-sm'
                   tooltip={'Save edited internalnote'}
+                  tooltipOptions={ttopts}
                   iconPos='right'
                   onClick={changepollnote}
                 />
@@ -1360,6 +1373,7 @@ class App extends Component {
                 className='p-button-text p-button-sm'
                 iconPos='right'
                 tooltip={'Add/Edit internal note'}
+                tooltipOptions={ttopts}
                 onClick={starteditpollnote}
               />
             )}
@@ -1367,6 +1381,7 @@ class App extends Component {
               icon='pi pi-trash'
               className='p-button-text p-button-sm p-button-danger'
               tooltip={'Delete question'}
+              tooltipOptions={ttopts}
               iconPos='right'
               onClick={deletepoll}
             />
@@ -1381,6 +1396,7 @@ class App extends Component {
                 label={node.name}
                 className='p-button-text p-button-secondary fails-tree'
                 tooltip={'Answer text'}
+                tooltipOptions={ttopts}
               ></Button>
             ) : (
               <React.Fragment>
@@ -1395,6 +1411,7 @@ class App extends Component {
                   }
                   placeholder='Edit...'
                   tooltip={'Edit answer text'}
+                  tooltipOptions={ttopts}
                   className='p-inputtext-sm'
                 ></InputText>
                 <Button
@@ -1402,6 +1419,7 @@ class App extends Component {
                   className='p-button-text p-button-sm'
                   iconPos='right'
                   tooltip={'Save answer text'}
+                  tooltipOptions={ttopts}
                   onClick={changepolltext}
                 />
               </React.Fragment>
@@ -1412,6 +1430,7 @@ class App extends Component {
                 className='p-button-text p-button-sm'
                 iconPos='right'
                 tooltip={'Edit answer text'}
+                tooltipOptions={ttopts}
                 onClick={starteditpoll}
               />
             )}
@@ -1420,6 +1439,7 @@ class App extends Component {
               className='p-button-text p-button-sm p-button-danger'
               iconPos='right'
               tooltip={'Delete question'}
+              tooltipOptions={ttopts}
               onClick={deletepoll}
             />
           </span>
@@ -1439,6 +1459,7 @@ class App extends Component {
               }
               placeholder='Add...'
               tooltip={'Edit new text'}
+              tooltipOptions={ttopts}
               className='p-inputtext-sm'
             ></InputText>
             {this.state.polledittext[node.id] &&
@@ -1447,6 +1468,7 @@ class App extends Component {
                   icon='pi pi-plus'
                   className='p-button-rounded p-button-text'
                   tooltip={'Add element'}
+                  tooltipOptions={ttopts}
                   onClick={changepolltext}
                 />
               )}
@@ -1489,6 +1511,11 @@ class App extends Component {
       if (this.state.decodedtoken.role.includes('audience')) {
         isStudent = true
       }
+    }
+    const ttopts = {
+      className: 'teal-tooltip',
+      position: 'top',
+      showDelay: 1000
     }
     switch (node.type) {
       case 'notebook': {
@@ -1554,6 +1581,7 @@ class App extends Component {
                 }
                 className='p-button-text p-button-secondary fails-tree'
                 tooltip={node.filename}
+                tooltipOptions={ttopts}
               ></Button>
             ) : (
               <React.Fragment>
@@ -1568,6 +1596,7 @@ class App extends Component {
                   }
                   placeholder='Edit...'
                   tooltip={'Edit poll name'}
+                  tooltipOptions={ttopts}
                   className='p-inputtext-sm'
                 ></InputText>
                 <Button
@@ -1575,6 +1604,7 @@ class App extends Component {
                   className='p-button-text p-button-sm'
                   iconPos='right'
                   tooltip={'Save poll name'}
+                  tooltipOptions={ttopts}
                   onClick={changeeditname}
                 />
               </React.Fragment>
@@ -1588,6 +1618,7 @@ class App extends Component {
                     iconPos='right'
                     onClick={starteditname}
                     tooltip='Edit notebook name'
+                    tooltipOptions={ttopts}
                   />
                 )}
                 <ToggleButton
@@ -1615,6 +1646,7 @@ class App extends Component {
                     this.changeApplet({ id: node.id, presentDownload })
                   }}
                   tooltip='Select download and edit options for students.'
+                  tooltipOptions={ttopts}
                   offLabel='No download'
                 />
                 {!this.state.isjupytereditnote[node.id] ? (
@@ -1624,6 +1656,7 @@ class App extends Component {
                       label={node.note}
                       className='p-button-text p-button-secondary fails-tree'
                       tooltip='Internal note'
+                      tooltipOptions={ttopts}
                     ></Button>
                   )
                 ) : (
@@ -1661,6 +1694,7 @@ class App extends Component {
                     iconPos='right'
                     onClick={starteditnote}
                     tooltip='Add/Edit interal note'
+                    tooltipOptions={ttopts}
                   />
                 )}
               </Fragment>
@@ -1672,6 +1706,7 @@ class App extends Component {
                 className='p-button-text p-button-sm p-button-danger'
                 iconPos='right'
                 tooltip='Edit notebook'
+                tooltipOptions={ttopts}
                 onClick={() => {
                   fetch(node.url)
                     .then(async (response) => {
@@ -1688,6 +1723,7 @@ class App extends Component {
                         ipynbuploadname: node.name || 'Dummy title',
                         jupyterId: node.id,
                         jupyteredit: true,
+                        jupyterRerunStartup: false,
                         selectedJupyterApp: undefined
                       })
                     })
@@ -1707,6 +1743,7 @@ class App extends Component {
                 className='p-button-text p-button-sm p-button-danger'
                 iconPos='right'
                 tooltip='Delete notebook'
+                tooltipOptions={ttopts}
                 onClick={() => {
                   this.patchLectureDetails({
                     removeipynb: {
@@ -1753,6 +1790,7 @@ class App extends Component {
                   })
                 }}
                 tooltip='Show or hide app for students outside of the lecture'
+                tooltipOptions={ttopts}
               />
             )}
             {node.presentToStudents && isStudent && (
@@ -1777,6 +1815,7 @@ class App extends Component {
                           ipynbuploadname: node.name || 'Dummy title',
                           jupyterId: node.ipynbid,
                           jupyteredit: true,
+                          jupyterRerunStartup: true,
                           selectedJupyterApp: {
                             appid: node.id,
                             appname: node.name
@@ -1813,6 +1852,7 @@ class App extends Component {
               }
               placeholder='Enter name for new or upload notebook ...'
               tooltip='Name for new jupyter notebook'
+              tooltipOptions={ttopts}
               className='p-inputtext-sm'
               size='35'
             ></InputText>
@@ -1822,6 +1862,7 @@ class App extends Component {
                   icon='pi pi-file'
                   className='p-button-rounded p-button-text'
                   tooltip='Create new jupyter notebook'
+                  tooltipOptions={ttopts}
                   onClick={() => {
                     this.setState({
                       jupyterDocument: {
@@ -1848,6 +1889,7 @@ class App extends Component {
                 icon='pi pi-upload'
                 className='p-button-rounded p-button-text'
                 tooltip='Upload jupyter notebook'
+                tooltipOptions={ttopts}
                 onClick={() => {
                   fileInputRef?.current?.click()
                 }}
@@ -1866,6 +1908,7 @@ class App extends Component {
                           jupyterFilename: file.name,
                           jupyterId: newId,
                           jupyteredit: true,
+                          jupyterRerunStartup: false,
                           selectedJupyterApp: undefined
                         })
                       } catch (error) {
@@ -2589,6 +2632,19 @@ class App extends Component {
                               </div>
                               <div className='p-col-3'>
                                 <Button
+                                  icon='pi pi-cog'
+                                  label='Get apps'
+                                  className='p-m-2'
+                                  onClick={() =>
+                                    this.doCopy({
+                                      fromuuid: this.state.selLecture,
+                                      what: 'ipynbs'
+                                    })
+                                  }
+                                ></Button>
+                              </div>
+                              <div className='p-col-3'>
+                                <Button
                                   icon='pi pi-file'
                                   label='PDF'
                                   className='p-m-2'
@@ -2723,7 +2779,6 @@ class App extends Component {
                         />
                       )}
                       {this.state.jupyterState?.dirty &&
-                        !jupytersave &&
                         !this.state.selectedJupyterApp && (
                           <Button
                             icon='pi pi-download'
@@ -2775,6 +2830,7 @@ class App extends Component {
                               accept: () => {
                                 this.setState({
                                   jupyteredit: false,
+                                  jupyterRerunStartup: false,
                                   jupyterDocument: undefined,
                                   jupyterFilename: undefined,
                                   jupyterId: undefined,
@@ -2786,6 +2842,7 @@ class App extends Component {
                           } else {
                             this.setState({
                               jupyteredit: false,
+                              jupyterRerunStartup: false,
                               jupyterDocument: undefined,
                               jupyterFilename: undefined,
                               jupyterId: undefined,
@@ -2841,6 +2898,7 @@ class App extends Component {
                     document={this.state.jupyterDocument}
                     filename={this.state.jupyterFilename}
                     appid={this.state.selectedJupyterApp?.appid}
+                    rerunAtStartup={this.state.jupyterRerunStartup}
                     stateCallback={(stateChange) => {
                       this.setState((state) => ({
                         jupyterState: {

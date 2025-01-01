@@ -60,10 +60,12 @@ export class JupyterEdit extends Component {
     this.sendToIFrame({
       type: 'loadJupyter',
       inLecture: !!this.props.appid,
+      rerunAtStartup: !!this.props.rerunAtStartup,
+      installScreenShotPatches: !!this.props.installScreenShotPatches,
       appid: this.props.appid,
       fileName: this.props.filename || 'example.ipynb',
       fileData: data,
-      kernelName: 'python'
+      kernelName: data?.metadata?.kernelspec ?? 'python'
     })
   }
 
@@ -74,6 +76,14 @@ export class JupyterEdit extends Component {
     })
     if (!fileToSaveObj.fileData) throw new Error('Empty saveJupyter response')
     return fileToSaveObj.fileData
+  }
+
+  async screenShot({ dpi }) {
+    const { screenshot } = await this.sendToIFrameAndReceive({
+      type: 'screenshotApp',
+      dpi
+    })
+    return screenshot
   }
 
   activateApp() {
@@ -154,11 +164,15 @@ export class JupyterEdit extends Component {
                 }
                 if (!retState.appletSizes) retState.appletSizes = {}
                 retState.appletSizes[appid] = { width, height }
+                this.props?.appletSizeChanged?.(appid, width, height)
               }
               return retState
             })
           }
         }
+        break
+      case 'reportKernelStatus':
+        this.props?.kernelStatusCallback?.(data.status)
         break
       default:
     }
