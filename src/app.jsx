@@ -1718,7 +1718,10 @@ class App extends Component {
                             response.statusText
                         )
                       this.setState({
-                        jupyterDocument: await response.json(),
+                        jupyterDocument: {
+                          ...(await response.json()),
+                          nbformat_minor: 5
+                        },
                         jupyterFilename: node.filename,
                         ipynbuploadname: node.name || 'Dummy title',
                         jupyterId: node.id,
@@ -1869,7 +1872,7 @@ class App extends Component {
                         metadata: {
                           orig_nbformat: 4
                         },
-                        nbformat_minor: 4,
+                        nbformat_minor: 5,
                         nbformat: 4,
                         cells: []
                       },
