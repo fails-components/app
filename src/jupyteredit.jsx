@@ -33,11 +33,19 @@ export class JupyterEdit extends Component {
 
   componentDidMount() {
     window.addEventListener('message', this.onMessage)
+    if (this.props.receiveInterceptorUpdate) {
+      this.activateInterceptor(true)
+    }
   }
 
   componentDidUpdate(prevProps) {
     if (this.props.appid !== prevProps.appid) {
       this.activateApp()
+    }
+    if (
+      this.props.receiveInterceptorUpdate !== prevProps.receiveInterceptorUpdate
+    ) {
+      this.activateInterceptor(!!this.props.receiveInterceptorUpdate)
     }
   }
 
@@ -107,6 +115,13 @@ export class JupyterEdit extends Component {
     })
   }
 
+  activateInterceptor(activate) {
+    return this.sendToIFrameAndReceive({
+      type: 'activateInterceptor',
+      activate
+    })
+  }
+
   onMessage(event) {
     if (event.origin !== new URL(jupyterurl).origin) return
     const data = event.data
@@ -173,6 +188,12 @@ export class JupyterEdit extends Component {
         break
       case 'reportKernelStatus':
         this.props?.kernelStatusCallback?.(data.status)
+        break
+      case 'sendInterceptorUpdate':
+        {
+          const { path, mime, state } = data
+          this.props?.receiveInterceptorUpdate?.({ path, mime, state })
+        }
         break
       default:
     }
