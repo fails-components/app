@@ -247,12 +247,14 @@ export class JupyterEdit extends Component {
         height = Math.ceil(appletSize.height * 1.01) + 'px'
       }
     }
+    let className = 'jpt-edit-iframe'
+    if (this.props.pointerOff) className += ' jpyt-edit-iframe-pointeroff'
 
     return (
       <Fragment>
         <iframe
           style={{ width, height }}
-          className='jpt-edit-iframe'
+          className={className}
           src={jupyterurl || this.props.jupyterurl}
           ref={(el) => {
             this.iframe = el
