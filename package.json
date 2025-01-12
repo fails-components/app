@@ -11,7 +11,7 @@
   "homepage": "/static/app/",
   "dependencies": {
     "@fails-components/config": "^1.5.4",
-    "@fails-components/data": "^1.2.0",
+    "@fails-components/data": "^1.4.1",
     "axios": "^1.7.4",
     "dexie": "^3.2.2",
     "image-blob-reduce": "^3.0.1",
