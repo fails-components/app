@@ -19,7 +19,7 @@
 import React, { Component, Fragment } from 'react'
 import './jupyteredit.css'
 
-const jupyterurl = 'http://127.0.0.1:8000/index.html'
+const jupyterurl = 'http://127.0.0.1:8000/jupyter/index.html'
 
 export class JupyterEdit extends Component {
   constructor(props) {
@@ -119,6 +119,15 @@ export class JupyterEdit extends Component {
     return this.sendToIFrameAndReceive({
       type: 'activateInterceptor',
       activate
+    })
+  }
+
+  sendInterceptorUpdate({ path, mime, state }) {
+    return this.sendToIFrameAndReceive({
+      type: 'receiveInterceptorUpdate',
+      path,
+      mime,
+      state
     })
   }
 
