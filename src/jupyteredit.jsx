@@ -19,8 +19,6 @@
 import React, { Component, Fragment } from 'react'
 import './jupyteredit.css'
 
-const jupyterurl = 'http://127.0.0.1:8000/jupyter/index.html'
-
 export class JupyterEdit extends Component {
   constructor(props) {
     super(props)
@@ -32,6 +30,7 @@ export class JupyterEdit extends Component {
   }
 
   componentDidMount() {
+    if (!this.props.jupyterurl) throw new Error('No jupyter url passed')
     window.addEventListener('message', this.onMessage)
     if (this.props.receiveInterceptorUpdate) {
       this.activateInterceptor(true)
@@ -39,6 +38,7 @@ export class JupyterEdit extends Component {
   }
 
   componentDidUpdate(prevProps) {
+    if (!this.props.jupyterurl) throw new Error('No jupyter url passed')
     if (this.props.appid !== prevProps.appid) {
       this.activateApp()
     }
@@ -132,7 +132,9 @@ export class JupyterEdit extends Component {
   }
 
   onMessage(event) {
-    if (event.origin !== new URL(jupyterurl).origin) return
+    if (event.source === window) return
+    if (event.source !== this.iframe.contentWindow) return
+    if (event.origin !== new URL(this.props.jupyterurl).origin) return
     const data = event.data
     if (event.data.requestId) {
       const requestId = event.data.requestId
@@ -209,7 +211,8 @@ export class JupyterEdit extends Component {
   }
 
   sendToIFrame(message) {
-    if (this.iframe) this.iframe.contentWindow.postMessage(message, jupyterurl)
+    if (this.iframe)
+      this.iframe.contentWindow.postMessage(message, this.props.jupyterurl)
   }
 
   async sendToIFrameAndReceive(message) {
@@ -255,7 +258,7 @@ export class JupyterEdit extends Component {
         <iframe
           style={{ width, height }}
           className={className}
-          src={jupyterurl || this.props.jupyterurl}
+          src={this.props.jupyterurl}
           ref={(el) => {
             this.iframe = el
           }}

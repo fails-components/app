@@ -2897,6 +2897,7 @@ class App extends Component {
                 >
                   <JupyterEdit
                     editActivated={this.state.jupyteredit}
+                    jupyterurl={window.location.origin + '/jupyter/index.html'}
                     ref={this.jupyteredit}
                     document={this.state.jupyterDocument}
                     filename={this.state.jupyterFilename}
