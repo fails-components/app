@@ -52,7 +52,7 @@ import failsLogoLongExp from './logo/logo1exp.svg'
 import Dexie from 'dexie'
 import JSZip from 'jszip'
 import QrScanner from 'qr-scanner'
-import { JupyterEdit } from './jupyteredit.jsx'
+import { JupyterEdit } from '@fails-components/jupyter-react-edit'
 
 QrScanner.WORKER_PATH = new URL(
   '../node_modules/qr-scanner/qr-scanner-worker.min.js',

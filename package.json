@@ -1,7 +1,7 @@
 {
   "name": "@fails-components/app",
   "version": "1.2.13",
-  "description": "Fails app ",
+  "description": "Fails app",
   "author": "Marten Richter",
   "license": "AGPL-3.0-or-later",
   "repository": {
@@ -12,6 +12,7 @@
   "dependencies": {
     "@fails-components/config": "^1.5.4",
     "@fails-components/data": "^1.4.1",
+    "@fails-components/jupyter-react-edit": "file:../jupyterfails/packages/jupyterreactedit",
     "axios": "^1.7.4",
     "dexie": "^3.2.2",
     "image-blob-reduce": "^3.0.1",
