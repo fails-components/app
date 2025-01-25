@@ -1577,7 +1577,9 @@ class App extends Component {
               <Button
                 label={
                   node.name +
-                  (canEdit ? ' (' + node.date.format('D.M.YYYY') + ')' : '')
+                  (canEdit && node.date
+                    ? ' (' + node.date.format('D.M.YYYY') + ')'
+                    : '')
                 }
                 className='p-button-text p-button-secondary fails-tree'
                 tooltip={node.filename}
@@ -2177,7 +2179,7 @@ class App extends Component {
         name: el.name,
         filename: el.filename,
         type: 'notebook',
-        date: moment(el.date),
+        date: el.date && moment(el.date),
         children:
           el.applets?.map?.((applet) => ({
             id: applet.appid,
