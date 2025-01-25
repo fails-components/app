@@ -10,7 +10,16 @@ export default defineConfig(() => {
     build: {
       outDir: 'build'
     },
-    plugins: [react(), eslint(), topLevelAwait()],
+    plugins: [
+      react(),
+      eslint({
+        exclude: [
+          'node_modules/**',
+          '../jupyterfails/packages/jupyterreactedit/lib/**/*.js' // Adjust this path if needed
+        ]
+      }),
+      topLevelAwait()
+    ],
     worker: {
       format: 'module'
     },
