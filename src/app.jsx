@@ -2657,7 +2657,7 @@ class App extends Component {
                               <div className='p-col-3'>
                                 <Button
                                   icon='pi pi-cog'
-                                  label='Get apps'
+                                  label='Get jupyter'
                                   className='p-m-2'
                                   onClick={() =>
                                     this.doCopy({
