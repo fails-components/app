@@ -120,6 +120,11 @@ addLocale('de', {
 })
 locale('de')
 
+const jupyterProxyDomains =
+  import.meta.env.REACT_APP_JUPYTER_PROXY_DOMAINS.split(' ').map(
+    (el) => 'https://' + el
+  )
+
 class QRScan extends Component {
   constructor(args) {
     super(args)
@@ -355,6 +360,20 @@ class App extends Component {
       .catch((error) => {
         console.log(
           'Get config/app.json problem/not found, this must not be an error',
+          error
+        )
+      })
+    axios({ url: '/config/proxy.json', baseURL: '/' })
+      .then((res) => {
+        const config = res.data
+        console.log('We got a proxy config', config)
+        if (config?.allowedSites) {
+          this.setState({ allowedSites: config.allowedSites })
+        }
+      })
+      .catch((error) => {
+        console.log(
+          'Get config/proxy.json problem/not found, this must not be an error',
           error
         )
       })
@@ -2905,6 +2924,11 @@ class App extends Component {
                     filename={this.state.jupyterFilename}
                     appid={this.state.selectedJupyterApp?.appid}
                     rerunAtStartup={this.state.jupyterRerunStartup}
+                    GDPRProxy={{
+                      proxySites: jupyterProxyDomains,
+                      allowedSites: this.state.allowedSites || [],
+                      proxyURL: globalThis.location.origin + '/jupyter/proxy/'
+                    }}
                     stateCallback={(stateChange) => {
                       this.setState((state) => ({
                         jupyterState: {
