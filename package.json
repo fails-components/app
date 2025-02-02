@@ -12,7 +12,7 @@
   "dependencies": {
     "@fails-components/config": "^1.5.4",
     "@fails-components/data": "^1.4.1",
-    "@fails-components/jupyter-react-edit": "file:../jupyterfails/packages/jupyterreactedit",
+    "@fails-components/jupyter-react-edit": "^0.0.1-alpha.7",
     "axios": "^1.7.4",
     "dexie": "^3.2.2",
     "image-blob-reduce": "^3.0.1",
