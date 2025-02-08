@@ -1769,10 +1769,19 @@ class App extends Component {
                 tooltip='Delete notebook'
                 tooltipOptions={ttopts}
                 onClick={() => {
-                  this.patchLectureDetails({
-                    removeipynb: {
-                      id: node.id
-                    }
+                  confirmDialog({
+                    message:
+                      'Do you really want to delete this notebook permanently? (Can not be undone!)',
+                    header: 'Confirm deletion',
+                    icon: 'pi pi-exclamation-triangle',
+                    accept: () => {
+                      this.patchLectureDetails({
+                        removeipynb: {
+                          id: node.id
+                        }
+                      })
+                    },
+                    reject: () => {} // do nothing
                   })
                 }}
               />
