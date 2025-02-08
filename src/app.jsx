@@ -49,6 +49,7 @@ import failsLogo from './logo/logo2.svg'
 import failsLogoLong from './logo/logo1.svg'
 import failsLogoExp from './logo/logo2exp.svg'
 import failsLogoLongExp from './logo/logo1exp.svg'
+import powerByJupyterLogo from './jupyterlogo/poweredbyjupyter-rec-lightbg.svg'
 import Dexie from 'dexie'
 import JSZip from 'jszip'
 import QrScanner from 'qr-scanner'
@@ -2899,21 +2900,40 @@ class App extends Component {
                     </Fragment>
                   }
                   footer={
-                    <Fragment>
-                      Build upon the shoulders of giants, see{' '}
-                      <button
-                        onClick={() => {
-                          if (this.jupyteredit.current) {
-                            this.jupyterLicense()
-                          }
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}
+                    >
+                      <img
+                        src={powerByJupyterLogo}
+                        style={{ width: '120px', marginRight: '10px' }}
+                        alt='powered by jupyter logo'
+                      />
+                      <div
+                        style={{
+                          marginLeft: 'auto',
+                          wordWrap: 'break-word',
+                          textAlign: 'right'
                         }}
-                        className='link-button'
                       >
-                        {' '}
-                        OSS attribution and licensing
-                      </button>
-                      of Jupyter Lite related code.
-                    </Fragment>
+                        Build upon the shoulders of giants, see{' '}
+                        <button
+                          onClick={() => {
+                            if (this.jupyteredit.current) {
+                              this.jupyterLicense()
+                            }
+                          }}
+                          className='link-button'
+                        >
+                          {' '}
+                          OSS attribution and licensing
+                        </button>
+                        of Jupyter Lite related code.
+                      </div>
+                    </div>
                   }
                   style={
                     this.state?.selectedJupyterApp?.appid
