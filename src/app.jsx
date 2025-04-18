@@ -2894,6 +2894,7 @@ class App extends Component {
                             placeholder='Select an applet to test...'
                             options={jupyterAppletOptions()}
                             optionLabel='appname'
+                            appendTo='self'
                           />
                         )}
                     </Fragment>
