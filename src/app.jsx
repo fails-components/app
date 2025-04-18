@@ -1617,7 +1617,7 @@ class App extends Component {
                     })
                   }
                   placeholder='Edit...'
-                  tooltip={'Edit poll name'}
+                  tooltip={'Edit notebook name'}
                   tooltipOptions={ttopts}
                   className='p-inputtext-sm'
                 ></InputText>
@@ -1653,7 +1653,6 @@ class App extends Component {
                   }
                   onChange={() => {
                     let presentDownload = 'no'
-                    console.log('presentDownload', node.presentDownload)
                     switch (node.presentDownload) {
                       case 'no':
                         presentDownload = 'download'
@@ -1664,7 +1663,6 @@ class App extends Component {
                       default:
                         presentDownload = 'no'
                     }
-                    console.log('presentDownload after', node.presentDownload)
                     this.changeApplet({ id: node.id, presentDownload })
                   }}
                   tooltip='Select download and edit options for students.'
@@ -1762,6 +1760,19 @@ class App extends Component {
                 }}
               />
             )}
+            {((['download', 'downloadAndEdit'].includes(node.presentDownload) &&
+              isStudent) ||
+              canEdit) && (
+              <a
+                href={node.url}
+                download
+                target='_blank'
+                rel='noopener noreferrer'
+                className='p-button p-component p-button-text p-button-sm p-button-danger p-button-icon-only'
+              >
+                <span className='p-button-icon p-c pi pi-download'></span>
+              </a>
+            )}
             {canEdit && (
               <Button
                 icon='pi pi-trash'
@@ -1787,18 +1798,6 @@ class App extends Component {
                 }}
               />
             )}
-            {['download', 'downloadAndEdit'].includes(node.presentDownload) &&
-              isStudent && (
-                <a
-                  href={node.url}
-                  download
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='p-button p-component p-button-text p-button-sm p-button-danger p-button-icon-only'
-                >
-                  <span className='p-button-icon p-c pi pi-download'></span>
-                </a>
-              )}
           </span>
         )
       }
@@ -2719,7 +2718,7 @@ class App extends Component {
                         </Card>
                       </div>
                     )}
-                    {jupyter && (jupyterdata.length > 1 || showemptyjupyter) && (
+                    {jupyter && (jupyterdata.length >= 1 || showemptyjupyter) && (
                       <div className='p-col-12'>
                         <Card title='Jupyter notebooks and apps'>
                           <Tree
