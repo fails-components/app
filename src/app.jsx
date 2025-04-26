@@ -1765,7 +1765,7 @@ class App extends Component {
               canEdit) && (
               <a
                 href={node.url}
-                download
+                download={node.filename}
                 target='_blank'
                 rel='noopener noreferrer'
                 className='p-button p-component p-button-text p-button-sm p-button-danger p-button-icon-only'
