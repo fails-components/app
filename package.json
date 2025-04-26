@@ -4,6 +4,7 @@
   "description": "Fails app",
   "author": "Marten Richter",
   "license": "AGPL-3.0-or-later",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/fails-components/app.git"
