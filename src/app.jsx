@@ -35,6 +35,8 @@ import { ToggleButton } from 'primereact/togglebutton'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { OverlayPanel } from 'primereact/overlaypanel'
 import { MultiSelect } from 'primereact/multiselect'
+import { DataTable } from 'primereact/datatable'
+import { Column } from 'primereact/column'
 // eslint-disable-next-line camelcase
 import jwt_decode from 'jwt-decode'
 import axios from 'axios'
@@ -1162,6 +1164,27 @@ class App extends Component {
     }
   }
 
+  async fetchCloudState() {
+    try {
+      const response = await axios.get('/cloudstatus', this.axiosConfig())
+      if (response) {
+        if (response.data.error) {
+          if (this.messages)
+            this.messages.show({
+              severity: 'error',
+              summary: 'get /cloudstatus failed',
+              detail: response.data.error
+            })
+        } else {
+          console.log('cloud state', response.data)
+          this.setState({ curcloudstate: response.data })
+        }
+      }
+    } catch (error) {
+      this.errorMessage(error)
+    }
+  }
+
   async jupyterLicense() {
     const { licenses } = await this.jupyteredit.current.getLicenses()
     const lines = []
@@ -2048,6 +2071,7 @@ class App extends Component {
     let displaynames = 'loading...'
 
     let joinlecture = false
+    let cloudstatus = false
     let startlecture = false
     let pictures = false
     let pastlectures = false
@@ -2195,6 +2219,9 @@ class App extends Component {
       }
       if (this.state.decodedtoken.role.includes('audience')) {
         joinlecture = true
+      }
+      if (this.state.decodedtoken.role.includes('administrator')) {
+        cloudstatus = true
       }
     }
 
@@ -2604,6 +2631,24 @@ class App extends Component {
                         </Card>
                       </div>
                     )}
+                    {cloudstatus && (
+                      <div className='p-col-12 p-md-6'>
+                        <Card title='Cloud status'>
+                          <Button
+                            icon='pi pi-cloud'
+                            href={this.state.support.url}
+                            label='Open'
+                            className='p-m-2'
+                            onClick={(event) => {
+                              this.fetchCloudState()
+                              this.setState({
+                                cloudstatus: true
+                              })
+                            }}
+                          ></Button>
+                        </Card>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className='p-col-12 p-md-6'>
@@ -2778,6 +2823,113 @@ class App extends Component {
                 {uaparser.getEngine().name} (Version:{' '}
                 {uaparser.getEngine().version})
               </OverlayPanel>
+              {cloudstatus && (
+                <Dialog
+                  visible={this.state.cloudstatus}
+                  modal={true}
+                  closable={true}
+                  header={
+                    <Fragment>
+                      <h3>
+                        Current cloud status{' '}
+                        <Button
+                          icon='pi pi-refresh'
+                          className='p-button-text p-button-sm'
+                          iconPos='right'
+                          tooltip='Refresh data'
+                          onClick={() => {
+                            this.fetchCloudState()
+                          }}
+                        />{' '}
+                      </h3>
+                    </Fragment>
+                  }
+                  position='top'
+                  onHide={() => {
+                    if (!this.state.cloudstatus) return
+                    this.setState({ cloudstatus: undefined })
+                  }}
+                >
+                  {this.state.curcloudstate && (
+                    <Fragment>
+                      <h4> Available AVS routers</h4>
+                      {this.state.curcloudstate.routerDetails && (
+                        <DataTable
+                          value={this.state.curcloudstate.routerDetails}
+                          paginator
+                          rows={5}
+                          size='small'
+                          scrollable
+                          scrollHeight='flex'
+                          rowsPerPageOptions={[5, 10, 25, 50]}
+                          tableStyle={{ minWidth: '50rem' }}
+                        >
+                          <Column field='region' header='Region'></Column>
+                          <Column
+                            field='url'
+                            header='Server URL'
+                            bodyClassName='urlTableEntry'
+                          ></Column>
+                          <Column field='numClients' header='Clients'></Column>
+                          <Column
+                            field='numLocalClients'
+                            header='Local sending clients'
+                          ></Column>
+                          <Column
+                            field='numRemoteClients'
+                            header='Remote sending clients'
+                          ></Column>
+                          <Column
+                            field='primaryLectureNum'
+                            header='Primary lectures'
+                          ></Column>
+                          <Column
+                            field='isPrimary'
+                            header='My primary router'
+                            body={(rowData) => (rowData ? 'Yes' : 'No')}
+                          ></Column>
+                        </DataTable>
+                      )}
+                      <h4> Running lectures</h4>
+                      {this.state.curcloudstate.lectureDetails && (
+                        <DataTable
+                          value={this.state.curcloudstate.lectureDetails}
+                          paginator
+                          rows={5}
+                          size='small'
+                          scrollable
+                          scrollHeight='flex'
+                          rowsPerPageOptions={[5, 10, 25, 50]}
+                          tableStyle={{ minWidth: '50rem' }}
+                        >
+                          <Column
+                            field='coursetitle'
+                            header='Course'
+                            bodyClassName='urlTableEntry'
+                          ></Column>
+                          <Column
+                            field='title'
+                            header='Title'
+                            bodyClassName='urlTableEntry'
+                          ></Column>
+                          <Column
+                            field='numberOfIdents'
+                            header='Active identities'
+                          ></Column>
+                          <Column
+                            field='numberOfNotescreens'
+                            header='Number of notepads/screens'
+                          ></Column>
+                          <Column field='uuid' header='UUID'></Column>
+                        </DataTable>
+                      )}
+                    </Fragment>
+                  )}
+                  {!this.state.curcloudstate && (
+                    <Fragment> No cloud status retrieved</Fragment>
+                  )}
+                </Dialog>
+              )}
               {jupyter && (
                 <Dialog
                   visible={this.state.jupyteredit}
