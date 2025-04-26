@@ -2886,7 +2886,9 @@ class App extends Component {
                           <Column
                             field='isPrimary'
                             header='My primary router'
-                            body={(rowData) => (rowData ? 'Yes' : 'No')}
+                            body={(rowData) =>
+                              rowData.isPrimary ? 'Yes' : 'No'
+                            }
                           ></Column>
                         </DataTable>
                       )}
