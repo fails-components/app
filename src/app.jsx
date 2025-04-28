@@ -2636,7 +2636,6 @@ class App extends Component {
                         <Card title='Cloud status'>
                           <Button
                             icon='pi pi-cloud'
-                            href={this.state.support.url}
                             label='Open'
                             className='p-m-2'
                             onClick={(event) => {
