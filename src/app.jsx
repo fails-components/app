@@ -37,6 +37,7 @@ import { OverlayPanel } from 'primereact/overlaypanel'
 import { MultiSelect } from 'primereact/multiselect'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
+import { Chips } from 'primereact/chips'
 // eslint-disable-next-line camelcase
 import jwt_decode from 'jwt-decode'
 import axios from 'axios'
@@ -2073,6 +2074,7 @@ class App extends Component {
     let joinlecture = false
     let cloudstatus = false
     let startlecture = false
+    let editlecturers = false
     let pictures = false
     let pastlectures = false
     let polls = false
@@ -2104,7 +2106,10 @@ class App extends Component {
     if (lectdetail) {
       if (lectdetail.title) lecturename = lectdetail.title
       if (lectdetail.coursetitle) coursename = lectdetail.coursetitle
-      if (lectdetail.ownersdisplaynames)
+      if (
+        lectdetail.ownersdisplaynames &&
+        lectdetail.ownersdisplaynames.length > 0
+      )
         displaynames = lectdetail.ownersdisplaynames.join(', ')
       if (lectdetail.running) running = true
       if (lectdetail.pictures) {
@@ -2203,6 +2208,7 @@ class App extends Component {
       }
       if (this.state.decodedtoken.role.includes('instructor')) {
         startlecture = true
+        editlecturers = true
         if (this.state.lectures && this.state.lectures.length > 1)
           pastlectures = true
         polls = true
@@ -2349,7 +2355,63 @@ class App extends Component {
               <div className='p-col'>
                 <h2 style={{ margin: '4px 0' }}>Course: {coursename}</h2>
                 <h3 style={{ margin: '2px 0' }}>Lecture: {lecturename}</h3>
-                <h4 style={{ margin: '2px 0' }}>{displaynames}</h4>
+                <h4 style={{ margin: '2px 0' }}>
+                  {this.state.editDisplaynames ? (
+                    <Fragment>
+                      <Chips
+                        value={this.state.editDisplaynames}
+                        onChange={({ value }) => {
+                          if (
+                            value?.length >= 1 &&
+                            value?.includes?.(displayname)
+                          ) {
+                            this.setState({ editDisplaynames: value })
+                          }
+                        }}
+                      />
+                      <Button
+                        icon='pi pi-save'
+                        className='p-button-text p-button-sm'
+                        iconPos='right'
+                        tooltip='Save lecturer names'
+                        onClick={async () => {
+                          this.patchLectureDetails({
+                            editDisplaynames: this.state.editDisplaynames
+                          })
+                          this.setState({ editDisplaynames: undefined })
+                        }}
+                      />
+                      <Button
+                        icon='pi pi-times'
+                        className='p-button-text p-button-sm'
+                        iconPos='right'
+                        tooltip='Cancel edit'
+                        onClick={async () => {
+                          this.setState({ editDisplaynames: undefined })
+                        }}
+                      />
+                    </Fragment>
+                  ) : (
+                    <Fragment>
+                      {' '}
+                      {displaynames}{' '}
+                      {editlecturers &&
+                        lectdetail.ownersdisplaynames?.length > 1 && (
+                          <Button
+                            icon='pi pi-pencil'
+                            className='p-button-text p-button-sm'
+                            iconPos='right'
+                            tooltip={'Edit lecturers'}
+                            onClick={() => {
+                              this.setState({
+                                editDisplaynames: lectdetail.ownersdisplaynames
+                              })
+                            }}
+                          />
+                        )}
+                    </Fragment>
+                  )}
+                </h4>
                 <br></br>
                 <h4 style={{ margin: '2px 0' }}>Hello {displayname}!</h4>
               </div>
