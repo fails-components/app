@@ -32,6 +32,11 @@ code {
   padding-right: 0.4rem;
 }
 
+.fails-tree-scrollable {
+  max-height: 30vh;
+  overflow-y: auto;
+}
+
 .link-button {
   background-color: transparent;
   border: none;

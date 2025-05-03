@@ -2719,6 +2719,7 @@ class App extends Component {
                         <Card title='Other lectures'>
                           <Tree
                             value={lecturedata}
+                            className='fails-tree-scrollable'
                             nodeTemplate={this.lectureTemplate}
                             selectionMode='single'
                             selectionKeys={this.state.selLecture}
@@ -2819,6 +2820,7 @@ class App extends Component {
                         <Card title='Polls'>
                           <Tree
                             value={polldata}
+                            className='fails-tree-scrollable'
                             nodeTemplate={this.pollTemplate}
                           ></Tree>
                         </Card>
@@ -2829,6 +2831,7 @@ class App extends Component {
                         <Card title='Jupyter notebooks and apps'>
                           <Tree
                             value={jupyterdata}
+                            className='fails-tree-scrollable'
                             nodeTemplate={this.jupyterTemplate}
                           ></Tree>
                         </Card>
