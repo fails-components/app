@@ -2354,7 +2354,10 @@ class App extends Component {
               </div>
               <div className='p-col'>
                 <h2 style={{ margin: '4px 0' }}>Course: {coursename}</h2>
-                <h3 style={{ margin: '2px 0' }}>Lecture: {lecturename}</h3>
+                <h3 style={{ margin: '2px 0' }}>
+                  Lecture: {lecturename}{' '}
+                  {date ? '(' + moment(date).format('D.M.YYYY') + ')' : ''}
+                </h3>
                 <h4 style={{ margin: '2px 0' }}>
                   {this.state.editDisplaynames ? (
                     <Fragment>
