@@ -2937,6 +2937,10 @@ class App extends Component {
                             header='Server URL'
                             bodyClassName='urlTableEntry'
                           ></Column>
+                          <Column
+                            field='maxClients'
+                            header='Max clients'
+                          ></Column>
                           <Column field='numClients' header='Clients'></Column>
                           <Column
                             field='numLocalClients'
