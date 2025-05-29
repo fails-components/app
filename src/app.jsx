@@ -2090,7 +2090,7 @@ class App extends Component {
 
     const availFeatures = [
       {
-        name: 'Audio and Video',
+        name: 'Audio and Video (deprecated)',
         id: 'avbroadcast'
       },
       {
