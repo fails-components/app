@@ -2951,6 +2951,10 @@ class App extends Component {
                             header='Remote sending clients'
                           ></Column>
                           <Column
+                            field='numRouterClients'
+                            header='Router clients'
+                          ></Column>
+                          <Column
                             field='primaryLectureNum'
                             header='Primary lectures'
                           ></Column>
