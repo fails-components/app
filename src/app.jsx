@@ -57,6 +57,8 @@ import Dexie from 'dexie'
 import JSZip from 'jszip'
 import QrScanner from 'qr-scanner'
 import { JupyterEdit } from '@fails-components/jupyter-react-edit'
+import katex from 'katex'
+import 'katex/dist/katex.min.css'
 
 QrScanner.WORKER_PATH = new URL(
   '../node_modules/qr-scanner/qr-scanner-worker.min.js',
@@ -1324,7 +1326,7 @@ class App extends Component {
           <span className='p-buttonset'>
             {!this.state.ispolledit[node.id] ? (
               <Button
-                label={node.name}
+                label={this.maybeUseLatex(node.name)}
                 className='p-button-text p-button-secondary fails-tree'
                 tooltip={'Question text'}
                 tooltipOptions={ttopts}
@@ -1437,7 +1439,7 @@ class App extends Component {
           <span className='p-buttonset'>
             {!this.state.ispolledit[node.id] ? (
               <Button
-                label={node.name}
+                label={this.maybeUseLatex(node.name)}
                 className='p-button-text p-button-secondary fails-tree'
                 tooltip={'Answer text'}
                 tooltipOptions={ttopts}
@@ -1993,6 +1995,56 @@ class App extends Component {
         return <b>{node.label}</b>
       }
     }
+  }
+
+  // latex duplicate to lecture app, maybe move to other package
+  maybeUseLatex(item) {
+    return this.detectLatex(item) ? this.convertToLatex(item) : item
+  }
+
+  detectLatex(string) {
+    return string.indexOf('$') !== -1
+  }
+
+  convertToLatex(string) {
+    const retarray = []
+    let secstart = 0
+    let seclatex = false
+    for (let curpos = 0; curpos < string.length; curpos++) {
+      const curchar = string.charAt(curpos)
+      if (curchar === '$') {
+        if (seclatex) {
+          const html = katex.renderToString(
+            string.substring(secstart, curpos),
+            {
+              throwOnError: false,
+              displayMode: false
+            }
+          )
+          retarray.push(
+            <span dangerouslySetInnerHTML={{ __html: html }}></span>
+          )
+          secstart = curpos + 1
+          seclatex = false
+        } else {
+          retarray.push(
+            <React.Fragment>
+              {string.substring(secstart, curpos - 1)}{' '}
+            </React.Fragment>
+          )
+          secstart = curpos + 1
+          seclatex = true
+        }
+      }
+    }
+
+    retarray.push(
+      <React.Fragment>
+        {string.substring(secstart, string.length)}{' '}
+      </React.Fragment>
+    )
+
+    return retarray
   }
 
   render() {
